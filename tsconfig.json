@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "src/main" },
+    { "path": "src/preload" },
+    { "path": "src/renderer" },
+    { "path": "src/sync-engine" },
+    { "path": "src/shared" },
+    { "path": "tsconfig.test.json" }
+  ]
+}

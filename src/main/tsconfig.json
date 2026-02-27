@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "../../dist/main",
+    "types": ["node"]
+  },
+  "include": ["./**/*.ts"],
+  "references": [
+    { "path": "../shared" },
+    { "path": "../sync-engine" }
+  ]
+}

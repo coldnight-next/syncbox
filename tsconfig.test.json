@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": {
+    "outDir": "./dist/tests",
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["tests/**/*.ts", "src/main/**/*.ts"],
+  "references": [
+    { "path": "src/shared" },
+    { "path": "src/sync-engine" }
+  ]
+}

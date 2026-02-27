@@ -1,0 +1,58 @@
+appId: com.syncbox.app
+productName: Syncbox
+copyright: Copyright © 2026 Syncbox
+asar: true
+npmRebuild: true
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - "!out/**/*.map"
+
+extraMetadata:
+  main: ./out/main/index.js
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: msi
+      arch:
+        - x64
+  artifactName: "${productName}-${version}-${arch}-setup.${ext}"
+  signtoolOptions:
+    publisherName: Syncbox
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Syncbox
+  runAfterFinish: true
+  installerSidebar: build/installerSidebar.bmp
+  uninstallerSidebar: build/installerSidebar.bmp
+  perMachine: false
+  allowElevation: true
+  deleteAppDataOnUninstall: false
+
+msi:
+  oneClick: false
+  perMachine: true
+  runAfterFinish: false
+
+publish:
+  provider: github
+  owner: syncbox
+  repo: syncbox
+  releaseType: release
+
+protocols:
+  name: Syncbox
+  schemes:
+    - syncbox
