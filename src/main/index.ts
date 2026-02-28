@@ -178,6 +178,7 @@ void app.whenReady().then(async () => {
   const publishableKey = import.meta.env.MAIN_VITE_CLERK_PUBLISHABLE_KEY ?? ''
   const secretKey = import.meta.env.MAIN_VITE_CLERK_SECRET_KEY ?? ''
   const oauthClientId = import.meta.env.MAIN_VITE_CLERK_OAUTH_CLIENT_ID ?? ''
+  const oauthClientSecret = import.meta.env.MAIN_VITE_CLERK_OAUTH_CLIENT_SECRET ?? ''
   const redirectUri = import.meta.env.MAIN_VITE_CLERK_REDIRECT_URI ?? 'http://127.0.0.1:19876/callback'
 
   if (publishableKey && secretKey && oauthClientId) {
@@ -185,6 +186,7 @@ void app.whenReady().then(async () => {
       publishableKey,
       secretKey,
       oauthClientId,
+      oauthClientSecret,
       redirectUri,
       logger: createLogger('auth'),
       onEvent: (event: AuthEvent) => {
@@ -192,6 +194,11 @@ void app.whenReady().then(async () => {
         // Auto-start P2P when user signs in (via PKCE flow)
         if (event.type === 'signed-in') {
           startPeerSync(event.userId)
+          // Bring window to foreground after browser-based OAuth completes
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.show()
+            mainWindow.focus()
+          }
         }
         if (event.type === 'signed-out') {
           stopPeerSync()

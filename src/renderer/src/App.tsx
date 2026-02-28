@@ -11,7 +11,7 @@ import { useAuthStore } from './stores/auth-store'
 import { useState, useEffect } from 'react'
 
 export function App(): React.JSX.Element {
-  const { auth, loading, loadState, signIn } = useAuthStore()
+  const { auth, loading, error, loadState, signIn, clearError } = useAuthStore()
 
   useEffect(() => {
     void loadState()
@@ -33,22 +33,25 @@ export function App(): React.JSX.Element {
   }
 
   if (!auth.isAuthenticated) {
-    return <LoginScreen onSignIn={signIn} />
+    return <LoginScreen onSignIn={signIn} error={error} onClearError={clearError} />
   }
 
   return <AppShell />
 }
 
-function LoginScreen({ onSignIn }: { onSignIn: () => Promise<void> }): React.JSX.Element {
+function LoginScreen({ onSignIn, error, onClearError }: {
+  onSignIn: () => Promise<void>
+  error: string | null
+  onClearError: () => void
+}): React.JSX.Element {
   const [signingIn, setSigningIn] = useState(false)
 
   const handleSignIn = async (): Promise<void> => {
+    onClearError()
     setSigningIn(true)
     try {
       await onSignIn()
     } finally {
-      // Don't reset signingIn — the auth:state-changed event will
-      // flip isAuthenticated to true which unmounts this component
       setSigningIn(false)
     }
   }
@@ -65,13 +68,19 @@ function LoginScreen({ onSignIn }: { onSignIn: () => Promise<void> }): React.JSX
         <h1 className="text-2xl font-bold text-white">Syncbox</h1>
         <p className="mt-1 text-sm text-slate-400">Sync your files across all your devices</p>
 
-        <div className="mt-8">
+        {error && (
+          <div className="mt-4 rounded-lg bg-red-500/20 border border-red-500/30 px-4 py-3">
+            <p className="text-xs text-red-300">{error}</p>
+          </div>
+        )}
+
+        <div className="mt-6">
           <button
             onClick={() => void handleSignIn()}
             disabled={signingIn}
             className="w-full rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent/30 transition-all hover:bg-blue-600 hover:shadow-accent/40 disabled:opacity-60"
           >
-            {signingIn ? 'Opening browser...' : 'Sign in'}
+            {signingIn ? 'Waiting for browser...' : 'Sign in'}
           </button>
           <p className="mt-3 text-xs text-slate-500">
             {signingIn

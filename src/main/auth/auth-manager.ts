@@ -21,6 +21,7 @@ export class AuthManager {
   private clerkClient: ReturnType<typeof createClerkClient>
   private frontendApi: string
   private oauthClientId: string
+  private oauthClientSecret: string
   private redirectUri: string
   private eventCallback: (event: AuthEvent) => void
   private stateCallback: (state: AuthState) => void
@@ -29,6 +30,7 @@ export class AuthManager {
     publishableKey: string
     secretKey: string
     oauthClientId: string
+    oauthClientSecret: string
     redirectUri: string
     logger: Logger
     onEvent: (event: AuthEvent) => void
@@ -38,6 +40,7 @@ export class AuthManager {
     this.logger = options.logger
     this.frontendApi = AuthManager.decodeFrontendApi(options.publishableKey)
     this.oauthClientId = options.oauthClientId
+    this.oauthClientSecret = options.oauthClientSecret
     this.redirectUri = options.redirectUri
     this.eventCallback = options.onEvent
     this.stateCallback = options.onStateChange
@@ -88,6 +91,7 @@ export class AuthManager {
     authorizeUrl.searchParams.set('response_type', 'code')
     authorizeUrl.searchParams.set('client_id', this.oauthClientId)
     authorizeUrl.searchParams.set('redirect_uri', this.redirectUri)
+    authorizeUrl.searchParams.set('scope', 'profile email')
     authorizeUrl.searchParams.set('code_challenge', codeChallenge)
     authorizeUrl.searchParams.set('code_challenge_method', 'S256')
     authorizeUrl.searchParams.set('state', state)
@@ -105,6 +109,7 @@ export class AuthManager {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           client_id: this.oauthClientId,
+          client_secret: this.oauthClientSecret,
           code,
           redirect_uri: this.redirectUri,
           code_verifier: codeVerifier,
@@ -112,15 +117,25 @@ export class AuthManager {
       })
 
       if (!tokenResponse.ok) {
-        throw new Error(`Token exchange failed: ${tokenResponse.status}`)
+        const errBody = await tokenResponse.text()
+        this.logger.error('Token exchange failed', { status: tokenResponse.status, body: errBody })
+        throw new Error(`Token exchange failed: ${tokenResponse.status} — ${errBody}`)
       }
 
       const tokenData = (await tokenResponse.json()) as {
         access_token: string
         refresh_token?: string
         expires_in: number
-        user_id: string
+        id_token?: string
+        user_id?: string
       }
+
+      this.logger.info('Token exchange successful', {
+        hasAccessToken: !!tokenData.access_token,
+        hasRefreshToken: !!tokenData.refresh_token,
+        hasIdToken: !!tokenData.id_token,
+        hasUserId: !!tokenData.user_id,
+      })
 
       const tokens: AuthTokens = {
         accessToken: tokenData.access_token,
@@ -128,15 +143,60 @@ export class AuthManager {
         expiresAt: Date.now() + tokenData.expires_in * 1000,
       }
 
-      this.store.set('tokens', tokens)
-      this.store.set('userId', tokenData.user_id)
+      // Get user ID: try token response, then id_token JWT, then userinfo endpoint
+      let userId = tokenData.user_id ?? null
+      if (!userId && tokenData.id_token) {
+        // Decode JWT payload (middle segment) without verification — we trust the token endpoint
+        const payload = JSON.parse(Buffer.from(tokenData.id_token.split('.')[1], 'base64url').toString()) as { sub?: string }
+        userId = payload.sub ?? null
+        this.logger.info('Extracted userId from id_token', { userId })
+      }
+      if (!userId) {
+        // Fall back to userinfo endpoint
+        const userInfoResp = await fetch(`https://${this.frontendApi}/oauth/userinfo`, {
+          headers: { Authorization: `Bearer ${tokenData.access_token}` },
+        })
+        if (userInfoResp.ok) {
+          const userInfo = (await userInfoResp.json()) as { user_id?: string; sub?: string }
+          userId = userInfo.user_id ?? userInfo.sub ?? null
+          this.logger.info('Extracted userId from userinfo', { userId })
+        } else {
+          this.logger.error('Userinfo request failed', { status: userInfoResp.status })
+        }
+      }
 
-      await this.loadUserState(tokenData.user_id)
-      await this.registerDevice(tokenData.user_id)
+      if (!userId) {
+        throw new Error('Could not determine user ID from OAuth response')
+      }
+
+      this.store.set('tokens', tokens)
+      this.store.set('userId', userId)
+
+      // Immediately mark as authenticated so the renderer transitions from login screen.
+      // loadUserState will enhance with profile details if the Clerk API is reachable.
+      this.state = {
+        isAuthenticated: true,
+        userId,
+        email: null,
+        displayName: null,
+        avatarUrl: null,
+        devices: [],
+      }
+      this.stateCallback(this.state)
+
+      await this.loadUserState(userId)
+
+      // Device registration is non-fatal — don't block sign-in if it fails
+      try {
+        await this.registerDevice(userId)
+      } catch (err) {
+        this.logger.warn('Device registration failed (non-fatal)', { error: String(err) })
+      }
+
       this.scheduleRefresh(tokens.expiresAt)
 
-      this.eventCallback({ type: 'signed-in', userId: tokenData.user_id })
-      this.logger.info('Sign-in complete', { userId: tokenData.user_id })
+      this.eventCallback({ type: 'signed-in', userId })
+      this.logger.info('Sign-in complete', { userId })
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error)
       this.logger.error('Sign-in failed', { error: msg })
@@ -286,6 +346,7 @@ export class AuthManager {
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         client_id: this.oauthClientId,
+        client_secret: this.oauthClientSecret,
         refresh_token: tokens.refreshToken,
       }),
     })

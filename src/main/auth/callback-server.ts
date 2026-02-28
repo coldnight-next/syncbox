@@ -50,7 +50,10 @@ export function startCallbackServer(
         }
 
         res.writeHead(200, { 'Content-Type': 'text/html' })
-        res.end('<html><body><h2>Signed in to Syncbox!</h2><p>You can close this window.</p></body></html>')
+        res.end(`<html><body style="font-family:system-ui;text-align:center;padding:40px">
+<h2>Signed in to Syncbox!</h2><p>This window will close automatically...</p>
+<script>setTimeout(function(){window.close()},1000)</script>
+</body></html>`)
 
         server.close()
         resolve({ code, state })
