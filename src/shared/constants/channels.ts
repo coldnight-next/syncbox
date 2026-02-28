@@ -40,6 +40,10 @@ export const IPC_CHANNELS = {
   PEER_DISCONNECT: 'peer:disconnect',
   PEER_GET_CONNECTED: 'peer:get-connected',
 
+  // Stats
+  STATS_GET: 'stats:get',
+  STATS_GET_REALTIME: 'stats:get-realtime',
+
   // Updates
   UPDATE_CHECK: 'update:check',
   UPDATE_DOWNLOAD: 'update:download',
@@ -55,6 +59,9 @@ export const IPC_EVENTS = {
   PEER_EVENT: 'peer:event',
   PEER_LIST_UPDATED: 'peer:list-updated',
   UPDATE_AVAILABLE: 'update:available',
+  STATS_REALTIME_UPDATE: 'stats:realtime-update',
+  UPDATE_NOT_AVAILABLE: 'update:not-available',
   UPDATE_PROGRESS: 'update:progress',
   UPDATE_DOWNLOADED: 'update:downloaded',
+  UPDATE_ERROR: 'update:error',
 } as const

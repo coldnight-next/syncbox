@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /releases/*.exe
+Disallow: /releases/*.msi
+
+Sitemap: https://syncbox.vercel.app/sitemap.xml

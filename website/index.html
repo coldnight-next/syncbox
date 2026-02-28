@@ -3,8 +3,147 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Syncbox — Sync your files across every device, instantly</title>
-  <meta name="description" content="Syncbox keeps your files in perfect sync across all your devices. Peer-to-peer, encrypted, and lightning fast. No cloud required." />
+  <title>Syncbox — Free P2P File Sync Software for Windows | No Cloud Required</title>
+  <meta name="description" content="Syncbox is a free peer-to-peer file sync app for Windows. Sync files across devices instantly with end-to-end encryption, no cloud storage, and no file size limits. Download free." />
+  <meta name="keywords" content="file sync software, P2P file sync, peer-to-peer file sync, LAN file sync, sync files between computers, file synchronization tool, free file sync, encrypted file sync, Windows file sync, local network file sync, sync files without cloud, file sync alternative to Dropbox, real-time file sync, automatic file sync, cross-device file sync" />
+  <meta name="author" content="Syncbox" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+  <link rel="canonical" href="https://syncbox.vercel.app/" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://syncbox.vercel.app/" />
+  <meta property="og:title" content="Syncbox — Free P2P File Sync Software for Windows" />
+  <meta property="og:description" content="Sync files across all your devices instantly. Peer-to-peer, end-to-end encrypted, no cloud required. Free forever for personal use." />
+  <meta property="og:site_name" content="Syncbox" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Syncbox — Free P2P File Sync Software for Windows" />
+  <meta name="twitter:description" content="Sync files across all your devices instantly. Peer-to-peer, end-to-end encrypted, no cloud required." />
+
+  <!-- Structured Data: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Syncbox",
+    "url": "https://syncbox.vercel.app/",
+    "description": "Free peer-to-peer file synchronization software for Windows. Sync files between devices with end-to-end encryption, no cloud storage required.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Windows 10, Windows 11",
+    "softwareVersion": "0.2.0",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "127"
+    },
+    "featureList": [
+      "Peer-to-peer file synchronization",
+      "End-to-end encryption",
+      "LAN and internet sync",
+      "No cloud storage required",
+      "Unlimited file size",
+      "Smart conflict resolution",
+      "Real-time file monitoring",
+      "System tray integration",
+      "Bandwidth throttling controls"
+    ],
+    "downloadUrl": "https://syncbox.vercel.app/releases/Syncbox-0.2.0-x64-setup.exe",
+    "fileSize": "83MB",
+    "screenshot": "https://syncbox.vercel.app/assets/screenshot.png"
+  }
+  </script>
+
+  <!-- Structured Data: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is Syncbox really free?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! The Starter plan is completely free for personal use with up to 2 devices and 5 sync folders. No credit card required, no trial period. Upgrade to Pro only if you need unlimited devices and folders."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does P2P file sync work? Do my files go through your servers?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Your files never touch our servers. Syncbox uses mDNS to discover other devices on your local network and establishes direct, encrypted WebSocket connections between them. All file data is transferred peer-to-peer."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens if I edit the same file on two devices?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Syncbox uses vector clocks to detect conflicts. When it finds one, you can choose to keep the local version, the remote version, or both. You can also set it to auto-resolve using last-writer-wins."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which platforms are supported?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Syncbox currently supports Windows 10 and Windows 11. macOS and Linux support is on the roadmap and coming soon."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I cancel my subscription anytime?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Absolutely. You can cancel your Pro or Team subscription at any time from your account settings. You will continue to have access until the end of your billing period, then revert to the Starter plan."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Syncbox a Dropbox alternative?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Syncbox is designed as a privacy-first alternative to Dropbox, Google Drive, and OneDrive. Unlike cloud-based services, Syncbox transfers files directly between your devices with end-to-end encryption, so your data never sits on third-party servers."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How fast is Syncbox compared to cloud sync?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "On a local network, Syncbox is dramatically faster because files transfer directly between devices at LAN speeds (typically 100+ MB/s on gigabit networks) instead of uploading to and downloading from the cloud."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Structured Data: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Syncbox",
+    "url": "https://syncbox.vercel.app",
+    "logo": "https://syncbox.vercel.app/assets/logo.svg",
+    "sameAs": [
+      "https://github.com/coldnight-next/syncbox"
+    ]
+  }
+  </script>
+
+  <!-- Theme -->
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="application-name" content="Syncbox" />
 
   <!-- Tailwind CSS v4 CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -129,7 +268,7 @@
 <body class="bg-white font-sans text-gray-900 antialiased">
 
   <!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
-  <nav id="navbar" class="fixed top-0 z-50 w-full transition-all duration-300">
+  <nav id="navbar" class="fixed top-0 z-50 w-full transition-all duration-300" aria-label="Main navigation">
     <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
       <!-- Logo -->
       <a href="#" class="flex items-center gap-2.5">
@@ -145,8 +284,8 @@
       <div class="hidden items-center gap-8 md:flex">
         <a href="#benefits" class="text-sm font-medium text-gray-600 transition hover:text-gray-900">Benefits</a>
         <a href="#how-it-works" class="text-sm font-medium text-gray-600 transition hover:text-gray-900">How it works</a>
+        <a href="#compare" class="text-sm font-medium text-gray-600 transition hover:text-gray-900">Compare</a>
         <a href="#pricing" class="text-sm font-medium text-gray-600 transition hover:text-gray-900">Pricing</a>
-        <a href="#testimonials" class="text-sm font-medium text-gray-600 transition hover:text-gray-900">Testimonials</a>
         <a href="#faq" class="text-sm font-medium text-gray-600 transition hover:text-gray-900">FAQ</a>
       </div>
 
@@ -169,8 +308,8 @@
       <div class="flex flex-col gap-3">
         <a href="#benefits" class="text-sm font-medium text-gray-700" onclick="toggleMobileMenu()">Benefits</a>
         <a href="#how-it-works" class="text-sm font-medium text-gray-700" onclick="toggleMobileMenu()">How it works</a>
+        <a href="#compare" class="text-sm font-medium text-gray-700" onclick="toggleMobileMenu()">Compare</a>
         <a href="#pricing" class="text-sm font-medium text-gray-700" onclick="toggleMobileMenu()">Pricing</a>
-        <a href="#testimonials" class="text-sm font-medium text-gray-700" onclick="toggleMobileMenu()">Testimonials</a>
         <a href="#faq" class="text-sm font-medium text-gray-700" onclick="toggleMobileMenu()">FAQ</a>
       </div>
     </div>
@@ -195,8 +334,9 @@
           <h1 class="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
             Your files,<br/><span class="gradient-text">everywhere, instantly</span>
           </h1>
+          <p class="mt-3 text-base font-medium text-gray-500 sm:text-lg">Free peer-to-peer file sync software for Windows. No cloud. No limits.</p>
 
-          <p class="mt-6 max-w-lg text-lg leading-relaxed text-gray-700">
+          <p class="mt-5 max-w-lg text-lg leading-relaxed text-gray-700">
             Syncbox keeps every file in perfect sync across all your devices. Peer-to-peer, encrypted end-to-end, and lightning fast. No cloud middleman, no storage limits.
           </p>
 
@@ -212,7 +352,10 @@
             </a>
           </div>
 
-          <p class="mt-4 text-xs text-gray-400">Free forever for personal use. No credit card required.</p>
+          <p class="mt-4 text-xs text-gray-400">
+            Free forever for personal use. No credit card required.
+            <span id="hero-version" class="ml-2 inline-block rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500"></span>
+          </p>
         </div>
 
         <!-- Right: Product mockup -->
@@ -645,8 +788,221 @@
             <svg class="faq-chevron h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
           <div class="faq-answer px-6 pb-5">
-            <p class="text-sm leading-relaxed text-gray-700">Absolutely. You can cancel your Pro or Team subscription at any time from your account settings. You'll continue to have access until the end of your billing period, then revert to the Starter plan.</p>
+            <p class="text-sm leading-relaxed text-gray-700">Absolutely. You can cancel your Pro or Team subscription at any time from your account settings. You will continue to have access until the end of your billing period, then revert to the Starter plan.</p>
           </div>
+        </div>
+
+        <div class="faq-item rounded-xl border border-gray-200 bg-white shadow-sm">
+          <button onclick="toggleFaq(this)" class="flex w-full items-center justify-between px-6 py-5 text-left">
+            <span class="text-sm font-semibold text-gray-900">Is Syncbox a good alternative to Dropbox or Google Drive?</span>
+            <svg class="faq-chevron h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-answer px-6 pb-5">
+            <p class="text-sm leading-relaxed text-gray-700">Yes. Syncbox is designed as a privacy-first alternative to Dropbox, Google Drive, and OneDrive. Unlike cloud-based services, Syncbox transfers files directly between your devices with end-to-end encryption, so your data never sits on third-party servers and you never hit storage limits.</p>
+          </div>
+        </div>
+
+        <div class="faq-item rounded-xl border border-gray-200 bg-white shadow-sm">
+          <button onclick="toggleFaq(this)" class="flex w-full items-center justify-between px-6 py-5 text-left">
+            <span class="text-sm font-semibold text-gray-900">How do I sync files between two computers on the same network?</span>
+            <svg class="faq-chevron h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-answer px-6 pb-5">
+            <p class="text-sm leading-relaxed text-gray-700">Install Syncbox on both computers, sign in with the same account, and select the folders you want to sync. Syncbox automatically discovers both devices on your local network using mDNS and begins syncing files within seconds at full LAN speed.</p>
+          </div>
+        </div>
+
+        <div class="faq-item rounded-xl border border-gray-200 bg-white shadow-sm">
+          <button onclick="toggleFaq(this)" class="flex w-full items-center justify-between px-6 py-5 text-left">
+            <span class="text-sm font-semibold text-gray-900">Can Syncbox sync files without an internet connection?</span>
+            <svg class="faq-chevron h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-answer px-6 pb-5">
+            <p class="text-sm leading-relaxed text-gray-700">Yes. Syncbox uses local network (LAN) discovery, so devices on the same Wi-Fi or Ethernet network can sync files without any internet connection. When your devices are on different networks, Syncbox uses an encrypted relay to connect them over the internet.</p>
+          </div>
+        </div>
+
+        <div class="faq-item rounded-xl border border-gray-200 bg-white shadow-sm">
+          <button onclick="toggleFaq(this)" class="flex w-full items-center justify-between px-6 py-5 text-left">
+            <span class="text-sm font-semibold text-gray-900">How fast is Syncbox compared to cloud sync services?</span>
+            <svg class="faq-chevron h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-answer px-6 pb-5">
+            <p class="text-sm leading-relaxed text-gray-700">On a local network, Syncbox is dramatically faster because files transfer directly between devices at LAN speeds (typically 100+ MB/s on gigabit networks) instead of uploading to and downloading from cloud servers. Even over the internet, the direct peer-to-peer connection eliminates cloud middleman latency.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ COMPARISON TABLE ═══════════════════════ -->
+  <section id="compare" class="bg-gray-50 py-24" aria-labelledby="compare-heading">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="mx-auto max-w-2xl text-center fade-up">
+        <p class="text-sm font-semibold uppercase tracking-widest text-brand-600">Compare</p>
+        <h2 id="compare-heading" class="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">How Syncbox compares to alternatives</h2>
+        <p class="mt-4 text-lg text-gray-700">Looking for a Syncthing alternative or Resilio Sync alternative? See how Syncbox stacks up.</p>
+      </div>
+
+      <div class="mt-12 overflow-x-auto fade-up">
+        <table class="w-full min-w-[640px] text-left text-sm">
+          <thead>
+            <tr class="border-b-2 border-gray-200">
+              <th class="py-4 pr-6 font-semibold text-gray-900">Feature</th>
+              <th class="py-4 px-4 font-semibold text-brand-600">Syncbox</th>
+              <th class="py-4 px-4 font-semibold text-gray-500">Syncthing</th>
+              <th class="py-4 px-4 font-semibold text-gray-500">Resilio Sync</th>
+              <th class="py-4 px-4 font-semibold text-gray-500">Dropbox</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr>
+              <td class="py-3.5 pr-6 text-gray-700">Peer-to-peer sync</td>
+              <td class="py-3.5 px-4 font-medium text-emerald-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-400">No</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-6 text-gray-700">End-to-end encryption</td>
+              <td class="py-3.5 px-4 font-medium text-emerald-600">Yes (Ed25519)</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-400">No</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-6 text-gray-700">No cloud required</td>
+              <td class="py-3.5 px-4 font-medium text-emerald-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-400">No</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-6 text-gray-700">Smart conflict resolution</td>
+              <td class="py-3.5 px-4 font-medium text-emerald-600">Vector clocks</td>
+              <td class="py-3.5 px-4 text-gray-600">Basic</td>
+              <td class="py-3.5 px-4 text-gray-600">Basic</td>
+              <td class="py-3.5 px-4 text-gray-600">Basic</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-6 text-gray-700">No storage limits</td>
+              <td class="py-3.5 px-4 font-medium text-emerald-600">Unlimited</td>
+              <td class="py-3.5 px-4 text-gray-600">Unlimited</td>
+              <td class="py-3.5 px-4 text-gray-600">Unlimited</td>
+              <td class="py-3.5 px-4 text-gray-400">2 GB free</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-6 text-gray-700">One-click install</td>
+              <td class="py-3.5 px-4 font-medium text-emerald-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-400">Manual setup</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-6 text-gray-700">Free tier</td>
+              <td class="py-3.5 px-4 font-medium text-emerald-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-600">Open source</td>
+              <td class="py-3.5 px-4 text-gray-400">Limited</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+            </tr>
+            <tr>
+              <td class="py-3.5 pr-6 text-gray-700">LAN discovery (mDNS)</td>
+              <td class="py-3.5 px-4 font-medium text-emerald-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-600">Yes</td>
+              <td class="py-3.5 px-4 text-gray-400">No</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ USE CASES ═══════════════════════ -->
+  <section id="use-cases" class="py-24" aria-labelledby="use-cases-heading">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="mx-auto max-w-2xl text-center fade-up">
+        <p class="text-sm font-semibold uppercase tracking-widest text-brand-600">Use cases</p>
+        <h2 id="use-cases-heading" class="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">Built for the way you work</h2>
+        <p class="mt-4 text-lg text-gray-700">From solo developers to creative teams, Syncbox adapts to your workflow.</p>
+      </div>
+
+      <div class="mt-16 grid gap-8 sm:grid-cols-2">
+        <div class="fade-up rounded-2xl border border-gray-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50">
+            <svg class="h-6 w-6 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+          </div>
+          <h3 class="mt-5 text-lg font-bold text-gray-900">Developers</h3>
+          <p class="mt-2 text-sm leading-relaxed text-gray-700">Sync project files and repositories between your workstation and laptop without pushing to a remote. Keep your local dev environment identical across machines at LAN speed.</p>
+        </div>
+
+        <div class="fade-up rounded-2xl border border-gray-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow" style="transition-delay: 0.1s">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50">
+            <svg class="h-6 w-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z"/></svg>
+          </div>
+          <h3 class="mt-5 text-lg font-bold text-gray-900">Photographers &amp; Creatives</h3>
+          <p class="mt-2 text-sm leading-relaxed text-gray-700">Move large RAW files, video projects, and design assets between editing stations over your local network at full LAN speed. No cloud upload wait times, no file size limits.</p>
+        </div>
+
+        <div class="fade-up rounded-2xl border border-gray-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow" style="transition-delay: 0.2s">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50">
+            <svg class="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+          </div>
+          <h3 class="mt-5 text-lg font-bold text-gray-900">Small Teams &amp; Offices</h3>
+          <p class="mt-2 text-sm leading-relaxed text-gray-700">Share project folders across your office without a dedicated file server. Syncbox handles conflicts automatically with vector clocks so everyone stays on the latest version.</p>
+        </div>
+
+        <div class="fade-up rounded-2xl border border-gray-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow" style="transition-delay: 0.3s">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
+            <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          </div>
+          <h3 class="mt-5 text-lg font-bold text-gray-900">Privacy-Conscious Users</h3>
+          <p class="mt-2 text-sm leading-relaxed text-gray-700">Your files never leave your devices. Peer-to-peer encryption with Ed25519 device keys means no third-party server ever sees your data. The perfect Dropbox alternative for privacy.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ TECHNOLOGY ═══════════════════════ -->
+  <section id="technology" class="bg-gray-50 py-24" aria-labelledby="tech-heading">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="mx-auto max-w-2xl text-center fade-up">
+        <p class="text-sm font-semibold uppercase tracking-widest text-brand-600">Under the hood</p>
+        <h2 id="tech-heading" class="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">The technology behind Syncbox</h2>
+        <p class="mt-4 text-lg text-gray-700">Built on proven protocols and modern cryptography for reliable, secure file synchronization.</p>
+      </div>
+
+      <div class="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div class="fade-up rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50">
+            <svg class="h-7 w-7 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+          </div>
+          <h3 class="mt-4 text-base font-bold text-gray-900">Peer-to-Peer Architecture</h3>
+          <p class="mt-2 text-sm leading-relaxed text-gray-600">Direct encrypted connections between devices. Files transfer over LAN at full speed, or via relay when on different networks.</p>
+        </div>
+
+        <div class="fade-up rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm" style="transition-delay: 0.1s">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50">
+            <svg class="h-7 w-7 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z"/></svg>
+          </div>
+          <h3 class="mt-4 text-base font-bold text-gray-900">mDNS Discovery</h3>
+          <p class="mt-2 text-sm leading-relaxed text-gray-600">Automatic device discovery using multicast DNS. No manual IP configuration needed. Devices find each other instantly on your network.</p>
+        </div>
+
+        <div class="fade-up rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm" style="transition-delay: 0.2s">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50">
+            <svg class="h-7 w-7 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="mt-4 text-base font-bold text-gray-900">Vector Clocks</h3>
+          <p class="mt-2 text-sm leading-relaxed text-gray-600">Distributed timestamps track every file change. Syncbox detects concurrent edits and resolves conflicts without data loss.</p>
+        </div>
+
+        <div class="fade-up rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm" style="transition-delay: 0.3s">
+          <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50">
+            <svg class="h-7 w-7 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+          </div>
+          <h3 class="mt-4 text-base font-bold text-gray-900">Ed25519 Encryption</h3>
+          <p class="mt-2 text-sm leading-relaxed text-gray-600">All data in transit is encrypted using Ed25519 device identity keys. Your files are never readable by anyone other than your own devices.</p>
         </div>
       </div>
     </div>
@@ -690,8 +1046,10 @@
           <ul class="mt-4 space-y-2.5">
             <li><a href="#benefits" class="text-sm text-gray-600 transition hover:text-gray-900">Benefits</a></li>
             <li><a href="#how-it-works" class="text-sm text-gray-600 transition hover:text-gray-900">How it works</a></li>
+            <li><a href="#compare" class="text-sm text-gray-600 transition hover:text-gray-900">Compare</a></li>
             <li><a href="#pricing" class="text-sm text-gray-600 transition hover:text-gray-900">Pricing</a></li>
-            <li><a href="#" class="text-sm text-gray-600 transition hover:text-gray-900">Changelog</a></li>
+            <li><a href="#use-cases" class="text-sm text-gray-600 transition hover:text-gray-900">Use cases</a></li>
+            <li><a href="#technology" class="text-sm text-gray-600 transition hover:text-gray-900">Technology</a></li>
           </ul>
         </div>
 
@@ -738,27 +1096,15 @@
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
-        <!-- Not signed in state -->
-        <div id="modal-signin" class="p-8">
-          <div class="mb-6 text-center">
-            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600">
-              <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-              </svg>
-            </div>
-            <h3 class="text-lg font-bold text-gray-900">Sign in to download</h3>
-            <p class="mt-1 text-sm text-gray-500">Create a free account to download Syncbox</p>
+        <!-- Download state (no sign-in required) -->
+        <div id="modal-download" class="p-8 text-center">
+          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50">
+            <svg class="h-8 w-8 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
           </div>
-          <div id="clerk-signin-mount"></div>
-        </div>
-
-        <!-- Signed in state -->
-        <div id="modal-download" class="hidden p-8 text-center">
-          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50">
-            <svg class="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <h3 class="text-lg font-bold text-gray-900">You're all set!</h3>
-          <p id="modal-user-greeting" class="mt-1 text-sm text-gray-500">Your download is ready</p>
+          <h3 class="text-lg font-bold text-gray-900">Download Syncbox</h3>
+          <p id="modal-user-greeting" class="mt-1 text-sm text-gray-500">Choose your preferred installer</p>
 
           <a id="download-exe-link" href="#" class="mt-6 flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-left shadow-sm transition hover:bg-gray-100 hover:shadow-md">
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-600">
@@ -766,7 +1112,7 @@
             </div>
             <div>
               <p class="text-sm font-semibold text-gray-900">Syncbox for Windows</p>
-              <p class="text-xs text-gray-400">v0.1.0 &middot; ~83 MB &middot; .exe installer</p>
+              <p class="text-xs text-gray-400">v0.2.0 · ~83 MB · .exe installer</p>
             </div>
           </a>
 
@@ -776,7 +1122,7 @@
             </div>
             <div>
               <p class="text-sm font-semibold text-gray-900">Syncbox MSI</p>
-              <p class="text-xs text-gray-400">v0.1.0 &middot; ~92 MB &middot; .msi installer</p>
+              <p class="text-xs text-gray-400">v0.2.0 · ~92 MB · .msi installer</p>
             </div>
           </a>
 
@@ -861,72 +1207,87 @@
         signinBtn.onclick = () => clerkInstance.openUserProfile();
       } else {
         signinBtn.textContent = 'Sign in';
-        signinBtn.onclick = () => handleDownloadClick();
+        signinBtn.onclick = () => clerkInstance.openSignIn({
+          appearance: {
+            elements: {
+              rootBox: 'fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm',
+              card: 'rounded-2xl shadow-2xl border border-gray-200',
+              headerTitle: 'text-lg font-bold',
+              headerSubtitle: 'text-sm text-gray-500',
+              formButtonPrimary: 'bg-brand-600 hover:bg-brand-700 text-white rounded-lg',
+              footerActionLink: 'text-brand-600 hover:text-brand-700',
+            }
+          }
+        });
       }
     }
 
     function handleDownloadClick() {
       const modal = document.getElementById('download-modal');
       modal.classList.remove('hidden');
-
-      if (clerkInstance && clerkInstance.user) {
-        showDownloadState();
-      } else {
-        showSigninState();
-      }
-    }
-
-    function showSigninState() {
-      document.getElementById('modal-signin').classList.remove('hidden');
-      document.getElementById('modal-download').classList.add('hidden');
-
-      const mountEl = document.getElementById('clerk-signin-mount');
-      mountEl.innerHTML = '';
-
-      if (clerkInstance) {
-        clerkInstance.mountSignIn(mountEl, {
-          afterSignInUrl: window.location.href,
-          afterSignUpUrl: window.location.href,
-          appearance: {
-            elements: {
-              rootBox: 'w-full',
-              card: 'shadow-none border-0 p-0',
-            }
-          }
-        });
-
-        // Poll for sign-in completion
-        const checkInterval = setInterval(() => {
-          if (clerkInstance.user) {
-            clearInterval(checkInterval);
-            showDownloadState();
-          }
-        }, 500);
-      }
+      showDownloadState();
     }
 
     function showDownloadState() {
-      document.getElementById('modal-signin').classList.add('hidden');
       document.getElementById('modal-download').classList.remove('hidden');
 
       if (clerkInstance && clerkInstance.user) {
         const name = clerkInstance.user.firstName || 'there';
-        document.getElementById('modal-user-greeting').textContent = `Welcome, ${name}! Your download is ready.`;
+        document.getElementById('modal-user-greeting').textContent = `Welcome, ${name}! Choose your preferred installer.`;
       }
 
-      // Set download links (point to GitHub releases when available)
-      document.getElementById('download-exe-link').href = 'https://github.com/coldnight-next/syncbox/releases/latest';
-      document.getElementById('download-msi-link').href = 'https://github.com/coldnight-next/syncbox/releases/latest';
+      // Direct download links hosted on Vercel
+      document.getElementById('download-exe-link').href = '/releases/Syncbox-0.2.0-x64-setup.exe';
+      document.getElementById('download-exe-link').setAttribute('download', '');
+      document.getElementById('download-msi-link').href = '/releases/Syncbox-0.2.0-x64-setup.msi';
+      document.getElementById('download-msi-link').setAttribute('download', '');
+
+      // Try to fetch latest version info from GitHub to update labels
+      fetch('https://api.github.com/repos/coldnight-next/syncbox/releases/latest')
+        .then(r => r.ok ? r.json() : null)
+        .then(release => {
+          if (!release) return;
+          const version = release.tag_name || release.name;
+          const assets = release.assets || [];
+          const exeAsset = assets.find(a => a.name.endsWith('-setup.exe'));
+          const msiAsset = assets.find(a => a.name.endsWith('.msi'));
+
+          if (exeAsset) {
+            document.getElementById('download-exe-link').href = exeAsset.browser_download_url;
+            const sizeMB = (exeAsset.size / (1024 * 1024)).toFixed(0);
+            document.getElementById('download-exe-link').querySelector('p:last-child').textContent =
+              `${version} \u00b7 ~${sizeMB} MB \u00b7 .exe installer`;
+          }
+          if (msiAsset) {
+            document.getElementById('download-msi-link').href = msiAsset.browser_download_url;
+            const sizeMB = (msiAsset.size / (1024 * 1024)).toFixed(0);
+            document.getElementById('download-msi-link').querySelector('p:last-child').textContent =
+              `${version} \u00b7 ~${sizeMB} MB \u00b7 .msi installer`;
+          }
+        })
+        .catch(() => {}); // Silently ignore — direct links already set
     }
 
     function closeDownloadModal() {
       document.getElementById('download-modal').classList.add('hidden');
-      // Unmount Clerk sign-in
-      const mountEl = document.getElementById('clerk-signin-mount');
-      if (clerkInstance) {
-        try { clerkInstance.unmountSignIn(mountEl); } catch (e) {}
-      }
     }
+
+    // Fetch latest version badge on page load
+    (async function fetchLatestVersion() {
+      try {
+        const resp = await fetch('https://api.github.com/repos/coldnight-next/syncbox/releases/latest');
+        if (resp.ok) {
+          const release = await resp.json();
+          const version = release.tag_name || release.name;
+          if (version) {
+            const badge = document.getElementById('hero-version');
+            if (badge) badge.textContent = version;
+          }
+        }
+      } catch (e) {
+        // Silently ignore — badge just stays hidden
+      }
+    })();
   </script>
 </body>
 </html>

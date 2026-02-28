@@ -5,6 +5,9 @@ import type { AuthManager } from './auth'
 import { checkForUpdates, downloadUpdate, installUpdate } from './auto-updater'
 import { writeLogEntry, createLogger } from './logging'
 import type { StructuredLogEntry } from '../shared/types/logging'
+import type { AppConfig } from '../shared/types/config'
+import { DEFAULT_APP_CONFIG } from '../shared/types/config'
+import type { StatsTimeRange } from '../shared/types/stats'
 
 const logger = createLogger('ipc')
 
@@ -19,6 +22,8 @@ export function registerIpcHandlers(
     onSyncFolderRemoved?: (folderPath: string) => void
     getSyncFolder?: () => string | null
     getSyncFolders?: () => string[]
+    getConfig?: () => AppConfig
+    setConfig?: (config: Partial<AppConfig>) => void
   },
 ): void {
   // Logging
@@ -82,18 +87,23 @@ export function registerIpcHandlers(
 
   // Config
   ipcMain.handle(IPC_CHANNELS.CONFIG_GET, () => {
-    return {
-      syncFolder: callbacks?.getSyncFolder?.() ?? '',
-      maxConcurrentTransfers: 4,
-      conflictStrategy: 'ask',
-      enableNotifications: true,
-      autoStart: false,
-      theme: 'system',
-    }
+    const config = callbacks?.getConfig?.() ?? { ...DEFAULT_APP_CONFIG }
+    config.syncFolder = callbacks?.getSyncFolder?.() ?? config.syncFolder
+    return config
   })
 
-  ipcMain.handle(IPC_CHANNELS.CONFIG_SET, async (_event, _config: Record<string, unknown>) => {
-    // TODO: persist config via electron-store
+  ipcMain.handle(IPC_CHANNELS.CONFIG_SET, async (_event, partial: Partial<AppConfig>) => {
+    callbacks?.setConfig?.(partial)
+    logger.info('Config updated', { keys: Object.keys(partial) })
+  })
+
+  // Stats
+  ipcMain.handle(IPC_CHANNELS.STATS_GET, (_event, range: StatsTimeRange) => {
+    return syncEngine.getStats(range)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.STATS_GET_REALTIME, () => {
+    return syncEngine.getRealtimePoint()
   })
 
   ipcMain.handle(IPC_CHANNELS.DIALOG_SELECT_FOLDER, async () => {
@@ -106,8 +116,7 @@ export function registerIpcHandlers(
 
   // Auth
   ipcMain.handle(IPC_CHANNELS.AUTH_SIGN_IN, async () => {
-    // No-op: sign-in is handled by Clerk React in the renderer.
-    // Use auth:set-user to notify main of the authenticated user.
+    await authManager?.signIn()
   })
 
   ipcMain.handle(IPC_CHANNELS.AUTH_SET_USER, (_event, userId: string) => {

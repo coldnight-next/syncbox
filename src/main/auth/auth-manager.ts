@@ -147,6 +147,13 @@ export class AuthManager {
     return getDeviceId()
   }
 
+  /** Get the current access token for relay auth. */
+  getAccessToken(): string | null {
+    const tokens = this.store.get('tokens')
+    if (!tokens || tokens.expiresAt <= Date.now()) return null
+    return tokens.accessToken
+  }
+
   async getPairedDevices(): Promise<DeviceInfo[]> {
     return this.state.devices
   }

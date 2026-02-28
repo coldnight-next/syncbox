@@ -4,6 +4,7 @@ export interface PeerInfo {
   host: string
   port: number
   userId: string
+  connectionType?: 'lan' | 'relay'
 }
 
 export type PeerEvent =
@@ -23,6 +24,8 @@ export type PeerMessageType =
   | 'file-data'
   | 'file-data-end'
   | 'ack'
+  | 'relay:peer-joined'
+  | 'relay:peer-left'
 
 export interface PeerMessage {
   type: PeerMessageType

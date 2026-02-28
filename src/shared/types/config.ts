@@ -1,3 +1,5 @@
+export type BandwidthPreset = 'no-limit' | 'auto' | 'custom'
+
 export interface AppConfig {
   syncFolder: string
   maxConcurrentTransfers: number
@@ -5,6 +7,23 @@ export interface AppConfig {
   enableNotifications: boolean
   autoStart: boolean
   theme: 'light' | 'dark' | 'system'
+  bandwidthPreset: BandwidthPreset
+  customUploadKBps: number
+  customDownloadKBps: number
+  relayUrl: string
+}
+
+export const DEFAULT_APP_CONFIG: AppConfig = {
+  syncFolder: '',
+  maxConcurrentTransfers: 4,
+  conflictStrategy: 'ask',
+  enableNotifications: true,
+  autoStart: false,
+  theme: 'system',
+  bandwidthPreset: 'no-limit',
+  customUploadKBps: 0,
+  customDownloadKBps: 0,
+  relayUrl: '',
 }
 
 export interface RendererEnv {

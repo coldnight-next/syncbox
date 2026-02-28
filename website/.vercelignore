@@ -1,0 +1,3 @@
+# Exclude large binary installers (exceed Vercel's 50MB static file limit)
+releases/*.exe
+releases/*.msi

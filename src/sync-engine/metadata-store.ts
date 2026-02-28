@@ -78,7 +78,20 @@ export class MetadataStore {
       CREATE INDEX IF NOT EXISTS idx_conflicts_path ON conflicts(relative_path);
       CREATE INDEX IF NOT EXISTS idx_conflicts_unresolved ON conflicts(resolution)
         WHERE resolution IS NULL;
+
+      CREATE TABLE IF NOT EXISTS transfer_stats (
+        timestamp INTEGER NOT NULL,
+        upload_bytes INTEGER NOT NULL DEFAULT 0,
+        download_bytes INTEGER NOT NULL DEFAULT 0,
+        files_transferred INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (timestamp)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_stats_ts ON transfer_stats(timestamp);
     `)
+
+    // Auto-prune stats older than 31 days
+    this.db.prepare('DELETE FROM transfer_stats WHERE timestamp < ?').run(Date.now() - 31 * 24 * 60 * 60 * 1000)
   }
 
   getFileMetadata(path: string): FileMetadata | undefined {
@@ -138,6 +151,27 @@ export class MetadataStore {
          VALUES (?, ?, ?)`,
       )
       .run(relativePath, JSON.stringify(clock), Date.now())
+  }
+
+  upsertTransferStat(timestamp: number, uploadBytes: number, downloadBytes: number, filesTransferred: number): void {
+    if (!this.db) throw new Error('Database not opened')
+    this.db
+      .prepare(
+        `INSERT INTO transfer_stats (timestamp, upload_bytes, download_bytes, files_transferred)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(timestamp) DO UPDATE SET
+           upload_bytes = upload_bytes + excluded.upload_bytes,
+           download_bytes = download_bytes + excluded.download_bytes,
+           files_transferred = files_transferred + excluded.files_transferred`,
+      )
+      .run(timestamp, uploadBytes, downloadBytes, filesTransferred)
+  }
+
+  getTransferStats(fromTs: number, toTs: number): Array<{ timestamp: number; upload_bytes: number; download_bytes: number; files_transferred: number }> {
+    if (!this.db) throw new Error('Database not opened')
+    return this.db
+      .prepare('SELECT * FROM transfer_stats WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp')
+      .all(fromTs, toTs) as Array<{ timestamp: number; upload_bytes: number; download_bytes: number; files_transferred: number }>
   }
 
   close(): void {

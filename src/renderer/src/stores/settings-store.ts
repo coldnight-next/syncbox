@@ -1,23 +1,27 @@
 import { create } from 'zustand'
 import type { AppConfig } from '@shared/types/config'
+import { ipc } from '../lib/ipc-client'
 
 interface SettingsStore {
-  config: AppConfig
-  setConfig: (config: AppConfig) => void
-  updateConfig: (partial: Partial<AppConfig>) => void
+  config: AppConfig | null
+  loading: boolean
+  loadConfig: () => Promise<void>
+  updateConfig: (partial: Partial<AppConfig>) => Promise<void>
 }
 
-const defaultConfig: AppConfig = {
-  syncFolder: '',
-  maxConcurrentTransfers: 4,
-  conflictStrategy: 'ask',
-  enableNotifications: true,
-  autoStart: false,
-  theme: 'system',
-}
-
-export const useSettingsStore = create<SettingsStore>((set) => ({
-  config: defaultConfig,
-  setConfig: (config) => set({ config }),
-  updateConfig: (partial) => set((state) => ({ config: { ...state.config, ...partial } })),
+export const useSettingsStore = create<SettingsStore>((set, get) => ({
+  config: null,
+  loading: false,
+  loadConfig: async () => {
+    set({ loading: true })
+    const config = await ipc.invoke('config:get')
+    set({ config, loading: false })
+  },
+  updateConfig: async (partial) => {
+    const current = get().config
+    if (!current) return
+    const updated = { ...current, ...partial }
+    set({ config: updated })
+    await ipc.invoke('config:set', updated)
+  },
 }))

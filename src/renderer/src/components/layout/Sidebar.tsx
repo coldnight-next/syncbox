@@ -1,7 +1,7 @@
-import { UserButton } from '@clerk/clerk-react'
 import type { SyncStatus } from '@shared/types/sync'
+import { useAuthStore } from '../../stores/auth-store'
 
-export type NavPage = 'folders' | 'activity' | 'devices' | 'settings'
+export type NavPage = 'dashboard' | 'folders' | 'activity' | 'devices' | 'settings'
 
 interface SidebarProps {
   currentPage: NavPage
@@ -46,6 +46,12 @@ export function Sidebar({ currentPage, onNavigate, status, conflictCount }: Side
       {/* Navigation */}
       <nav className="no-drag flex-1 space-y-1 px-3">
         <NavItem
+          icon={<DashboardIcon />}
+          label="Dashboard"
+          active={currentPage === 'dashboard'}
+          onClick={() => onNavigate('dashboard')}
+        />
+        <NavItem
           icon={<FolderIcon />}
           label="Folders"
           active={currentPage === 'folders'}
@@ -73,18 +79,7 @@ export function Sidebar({ currentPage, onNavigate, status, conflictCount }: Side
       </nav>
 
       {/* User */}
-      <div className="no-drag border-t border-white/10 px-4 py-3">
-        <div className="flex items-center gap-2.5">
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: 'h-7 w-7',
-              },
-            }}
-          />
-          <span className="text-xs text-sidebar-text">Account</span>
-        </div>
-      </div>
+      <UserSection />
     </aside>
   )
 }
@@ -122,6 +117,17 @@ function NavItem({
   )
 }
 
+function DashboardIcon(): React.JSX.Element {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+      <path d="M3 3v18h18" />
+      <path d="M18 17V9" />
+      <path d="M13 17V5" />
+      <path d="M8 17v-3" />
+    </svg>
+  )
+}
+
 function FolderIcon(): React.JSX.Element {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -154,5 +160,39 @@ function SettingsIcon(): React.JSX.Element {
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
+  )
+}
+
+function UserSection(): React.JSX.Element {
+  const { auth, signOut } = useAuthStore()
+
+  return (
+    <div className="no-drag border-t border-white/10 px-4 py-3">
+      <div className="flex items-center gap-2.5">
+        {auth.avatarUrl ? (
+          <img src={auth.avatarUrl} alt="" className="h-7 w-7 rounded-full" />
+        ) : (
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-sidebar-hover text-xs font-medium text-sidebar-text">
+            {(auth.displayName ?? auth.email ?? '?').charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="truncate text-xs font-medium text-sidebar-text-active">
+            {auth.displayName ?? auth.email ?? 'Account'}
+          </p>
+        </div>
+        <button
+          onClick={() => void signOut()}
+          title="Sign out"
+          className="shrink-0 rounded p-1 text-sidebar-text hover:bg-sidebar-hover hover:text-white transition-colors"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
+      </div>
+    </div>
   )
 }

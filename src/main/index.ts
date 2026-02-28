@@ -1,11 +1,11 @@
 import { app, BrowserWindow } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
-import { createAppWindow, setQuitting } from './app-window'
+import { createAppWindow, setQuitting, registerAppProtocol, setupProtocolHandler } from './app-window'
 import { registerIpcHandlers } from './ipc-handlers'
 import { createTray, setTraySyncEngine, updateTrayStatus } from './tray'
 import { createAppMenu } from './menu'
 import { initLogging, createLogger } from './logging'
-import { initAutoUpdater } from './auto-updater'
+import { initAutoUpdater, disposeAutoUpdater } from './auto-updater'
 import { AuthManager, getDeviceId, getPublicKeyHex, sign, verifySignature, getDeviceName } from './auth'
 import { createPeerManager, registerPeerHandlers } from './p2p-bridge'
 import { SyncEngine } from '../sync-engine'
@@ -13,12 +13,15 @@ import type { PeerManager } from '../sync-engine/p2p/peer-manager'
 import type { SyncEvent, SyncStatus } from '../shared/types/sync'
 import type { AuthState, AuthEvent } from '../shared/types/auth'
 import Store from 'electron-store'
+import type { AppConfig } from '../shared/types/config'
+import { DEFAULT_APP_CONFIG } from '../shared/types/config'
+import { IPC_EVENTS } from '../shared/constants/channels'
 
 initLogging()
 const logger = createLogger('main')
 
-// Persist sync folder paths across restarts
-const settingsStore = new Store<{ syncFolder?: string; syncFolders?: string[] }>({ name: 'syncbox-settings' })
+// Persist settings across restarts
+const settingsStore = new Store<{ syncFolder?: string; syncFolders?: string[]; config?: AppConfig }>({ name: 'syncbox-settings' })
 
 let mainWindow: BrowserWindow | null = null
 let syncEngine: SyncEngine | null = null
@@ -79,6 +82,17 @@ function startPeerSync(userId: string): void {
   registerPeerHandlers(peerManager, getMainWindow)
   peerManager.start()
   logger.info('PeerManager started', { deviceId, userId })
+
+  // Start relay connection if configured
+  const config = getAppConfig()
+  const relayUrl = config.relayUrl || (import.meta.env.MAIN_VITE_RELAY_URL ?? '')
+  if (relayUrl && authManager) {
+    const token = authManager.getAccessToken()
+    if (token) {
+      peerManager.startRelay(relayUrl, token)
+      logger.info('Relay connection started', { relayUrl })
+    }
+  }
 }
 
 function stopPeerSync(): void {
@@ -92,6 +106,19 @@ function stopPeerSync(): void {
 function persistFolders(): void {
   settingsStore.set('syncFolders', currentSyncFolders)
 }
+
+function getAppConfig(): AppConfig {
+  return settingsStore.get('config') ?? { ...DEFAULT_APP_CONFIG }
+}
+
+function setAppConfig(partial: Partial<AppConfig>): void {
+  const current = getAppConfig()
+  const updated = { ...current, ...partial }
+  settingsStore.set('config', updated)
+  syncEngine?.updateConfig(updated)
+}
+
+let statsTimer: ReturnType<typeof setInterval> | null = null
 
 async function addSyncFolder(folderPath: string): Promise<void> {
   if (currentSyncFolders.includes(folderPath)) return
@@ -120,9 +147,15 @@ async function removeSyncFolder(folderPath: string): Promise<void> {
   }
 }
 
+// Must register custom protocol BEFORE app is ready
+registerAppProtocol()
+
 void app.whenReady().then(async () => {
   logger.info('App ready')
   electronApp.setAppUserModelId('com.syncbox.app')
+
+  // Set up protocol handler to serve renderer files via syncbox-app://
+  setupProtocolHandler()
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
@@ -137,11 +170,9 @@ void app.whenReady().then(async () => {
     mainWindow.hide()
   }
 
-  // Init Auto-Updater
-  if (process.env.MAIN_AUTO_UPDATE === 'true') {
-    initAutoUpdater(mainWindow)
-    logger.info('Auto-updater initialized')
-  }
+  // Init Auto-Updater (always enabled — checks on startup + every 4 hours)
+  initAutoUpdater(mainWindow)
+  logger.info('Auto-updater initialized')
 
   // Init Auth — electron-vite exposes MAIN_VITE_* env vars via import.meta.env
   const publishableKey = import.meta.env.MAIN_VITE_CLERK_PUBLISHABLE_KEY ?? ''
@@ -156,6 +187,13 @@ void app.whenReady().then(async () => {
       logger: createLogger('auth'),
       onEvent: (event: AuthEvent) => {
         sendToRenderer('auth:event', event)
+        // Auto-start P2P when user signs in (via PKCE flow)
+        if (event.type === 'signed-in') {
+          startPeerSync(event.userId)
+        }
+        if (event.type === 'signed-out') {
+          stopPeerSync()
+        }
       },
       onStateChange: (state: AuthState) => {
         sendToRenderer('auth:state-changed', state)
@@ -163,6 +201,13 @@ void app.whenReady().then(async () => {
     })
     await authManager.initialize()
     logger.info('AuthManager initialized')
+
+    // If AuthManager restored a session, start P2P immediately
+    const restoredState = authManager.getState()
+    if (restoredState.isAuthenticated && restoredState.userId) {
+      logger.info('Restored auth session, starting P2P', { userId: restoredState.userId })
+      startPeerSync(restoredState.userId)
+    }
   } else {
     logger.warn('Clerk keys not configured, auth disabled')
   }
@@ -218,7 +263,17 @@ void app.whenReady().then(async () => {
     },
     getSyncFolder: () => currentSyncFolders[0] ?? null,
     getSyncFolders: () => currentSyncFolders,
+    getConfig: getAppConfig,
+    setConfig: setAppConfig,
   })
+
+  // Push realtime stats to renderer every 5 seconds
+  statsTimer = setInterval(() => {
+    if (syncEngine) {
+      const point = syncEngine.getRealtimePoint()
+      sendToRenderer(IPC_EVENTS.STATS_REALTIME_UPDATE, point)
+    }
+  }, 5000)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -230,6 +285,11 @@ void app.whenReady().then(async () => {
 // 'before-quit' fires when the app is truly quitting (Quit from tray, etc.)
 app.on('before-quit', () => {
   setQuitting(true)
+  disposeAutoUpdater()
+  if (statsTimer) {
+    clearInterval(statsTimer)
+    statsTimer = null
+  }
   stopPeerSync()
   void syncEngine?.stop()
   authManager?.dispose()

@@ -1,6 +1,7 @@
 import { WebSocket, WebSocketServer } from 'ws'
 import { Discovery } from './discovery'
 import { PeerConnection } from './peer-connection'
+import { RelayConnection } from './relay-connection'
 import type { PeerInfo, PeerEvent, PeerMessage } from '../../shared/types/peer'
 import type { Logger } from '../logger'
 
@@ -24,6 +25,8 @@ export class PeerManager {
   private wss: WebSocketServer | null = null
   private connections = new Map<string, PeerConnection>()
   private discoveredPeers = new Map<string, PeerInfo>()
+  private relayConnection: RelayConnection | null = null
+  private relayPeers = new Set<string>()
 
   constructor(options: PeerManagerOptions) {
     this.options = options
@@ -64,6 +67,7 @@ export class PeerManager {
 
   stop(): void {
     this.discovery.stop()
+    this.stopRelay()
 
     for (const conn of this.connections.values()) {
       conn.close()
@@ -77,6 +81,61 @@ export class PeerManager {
     }
 
     this.options.logger.info('PeerManager stopped')
+  }
+
+  /** Connect to the relay server for internet P2P sync. */
+  startRelay(relayUrl: string, token: string): void {
+    if (this.relayConnection) return
+    if (!relayUrl) return
+
+    this.relayConnection = new RelayConnection({
+      relayUrl,
+      token,
+      deviceId: this.options.deviceId,
+      logger: this.options.logger,
+      onPeerJoined: (deviceId) => {
+        this.relayPeers.add(deviceId)
+        const peer: PeerInfo = {
+          deviceId,
+          name: `Relay device ${deviceId.slice(0, 6)}`,
+          host: '',
+          port: 0,
+          userId: this.options.userId,
+          connectionType: 'relay',
+        }
+        this.discoveredPeers.set(deviceId, peer)
+        this.options.onEvent({ type: 'peer-discovered', peer })
+        this.options.onEvent({ type: 'peer-connected', deviceId })
+      },
+      onPeerLeft: (deviceId) => {
+        this.relayPeers.delete(deviceId)
+        // Only remove from discovered if no LAN connection
+        if (!this.connections.has(deviceId)) {
+          this.discoveredPeers.delete(deviceId)
+        }
+        this.options.onEvent({ type: 'peer-disconnected', deviceId })
+      },
+      onMessage: (msg) => {
+        // Find which relay peer sent this (in relay mode, messages come through broadcast)
+        // The msg should contain sender info — forward to the sync engine
+        // For relay, we use a convention that sender deviceId is in the message
+        this.options.onMessage('relay', msg)
+      },
+      onClose: () => {
+        this.relayPeers.clear()
+      },
+    })
+
+    this.relayConnection.connect()
+    this.options.logger.info('Relay connection started', { relayUrl })
+  }
+
+  stopRelay(): void {
+    if (this.relayConnection) {
+      this.relayConnection.close()
+      this.relayConnection = null
+      this.relayPeers.clear()
+    }
   }
 
   getDiscoveredPeers(): PeerInfo[] {
@@ -112,17 +171,32 @@ export class PeerManager {
   }
 
   sendTo(deviceId: string, msg: PeerMessage): void {
+    // LAN connections take priority over relay
     const conn = this.connections.get(deviceId)
     if (conn?.isAuthenticated()) {
       conn.send(msg)
+      return
+    }
+    // Fall back to relay
+    if (this.relayConnection && this.relayPeers.has(deviceId)) {
+      this.relayConnection.send(msg)
     }
   }
 
   broadcast(msg: PeerMessage): void {
-    for (const conn of this.connections.values()) {
+    const sentViaLan = new Set<string>()
+
+    // Send to all LAN connections first
+    for (const [deviceId, conn] of this.connections) {
       if (conn.isAuthenticated()) {
         conn.send(msg)
+        sentViaLan.add(deviceId)
       }
+    }
+
+    // Also send via relay (relay broadcasts to all peers in the room)
+    if (this.relayConnection?.isConnected()) {
+      this.relayConnection.send(msg)
     }
   }
 

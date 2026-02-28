@@ -3,6 +3,7 @@ import type { AppConfig } from './config'
 import type { StructuredLogEntry } from './logging'
 import type { AuthState, AuthEvent, DeviceInfo } from './auth'
 import type { PeerInfo, PeerEvent } from './peer'
+import type { TransferStats, TransferDataPoint, StatsTimeRange } from './stats'
 
 export interface IpcMainHandlers {
   // Sync
@@ -49,6 +50,10 @@ export interface IpcMainHandlers {
   'peer:disconnect': { params: [deviceId: string]; return: void }
   'peer:get-connected': { params: []; return: PeerInfo[] }
 
+  // Stats
+  'stats:get': { params: [range: StatsTimeRange]; return: TransferStats }
+  'stats:get-realtime': { params: []; return: TransferDataPoint }
+
   // Updates
   'update:check': { params: []; return: void }
   'update:download': { params: []; return: void }
@@ -63,9 +68,12 @@ export interface IpcRendererEvents {
   'auth:event': AuthEvent
   'peer:event': PeerEvent
   'peer:list-updated': PeerInfo[]
+  'stats:realtime-update': TransferDataPoint
   'update:available': { version: string; releaseNotes?: string }
+  'update:not-available': { version: string }
   'update:progress': { percent: number; bytesPerSecond: number; transferred: number; total: number }
   'update:downloaded': Record<string, never>
+  'update:error': { message: string }
 }
 
 export type IpcChannel = keyof IpcMainHandlers

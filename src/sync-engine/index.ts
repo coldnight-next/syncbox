@@ -9,6 +9,8 @@ import type {
   CoalescingConfig,
 } from '../shared/types/sync'
 import type { PeerMessage, FileManifestEntry } from '../shared/types/peer'
+import type { AppConfig } from '../shared/types/config'
+import type { TransferStats, TransferDataPoint, StatsTimeRange } from '../shared/types/stats'
 import { relativeSyncPath } from '../shared/utils/paths'
 import { FileWatcher } from './watcher'
 import { MetadataStore } from './metadata-store'
@@ -32,6 +34,9 @@ import { ConflictResolver } from './conflict/resolver'
 import type { ConflictStrategy, ConflictContext } from './conflict/resolver'
 import type { Logger } from './logger'
 import { createNoopLogger } from './logger'
+import { TokenBucketThrottler } from './throttler'
+import { StatsCollector } from './stats-collector'
+import { sampleCpuUsage, computeAutoFraction } from './auto-throttle'
 
 export interface SyncEngineOptions {
   watchPaths: string[]
@@ -76,6 +81,14 @@ export class SyncEngine {
   private totalBytes = 0
   private transferredBytes = 0
 
+  // Throttling
+  private uploadThrottler = new TokenBucketThrottler(0)
+  private downloadThrottler = new TokenBucketThrottler(0)
+  private autoThrottleTimer: ReturnType<typeof setInterval> | null = null
+
+  // Stats collection
+  private statsCollector: StatsCollector | null = null
+
   constructor(options: SyncEngineOptions) {
     this.options = options
     this.logger = options.logger ?? createNoopLogger()
@@ -96,6 +109,69 @@ export class SyncEngine {
     this.options.watchPaths = paths
   }
 
+  /** Update config — adjusts throttler rates based on bandwidth preset. */
+  updateConfig(config: AppConfig): void {
+    // Stop any existing auto-throttle timer
+    if (this.autoThrottleTimer) {
+      clearInterval(this.autoThrottleTimer)
+      this.autoThrottleTimer = null
+    }
+
+    switch (config.bandwidthPreset) {
+      case 'no-limit':
+        this.uploadThrottler.setRate(0)
+        this.downloadThrottler.setRate(0)
+        break
+      case 'custom': {
+        const upRate = config.customUploadKBps * 1024
+        const downRate = config.customDownloadKBps * 1024
+        this.uploadThrottler.setRate(upRate)
+        this.downloadThrottler.setRate(downRate)
+        break
+      }
+      case 'auto':
+        // Set a base rate, then let the auto-throttle adjust
+        this.uploadThrottler.setRate(0)
+        this.downloadThrottler.setRate(0)
+        this.autoThrottleTimer = setInterval(() => {
+          void this.autoAdjustThrottle()
+        }, 5000)
+        break
+    }
+
+    this.logger.info('Config updated', { bandwidthPreset: config.bandwidthPreset })
+  }
+
+  /** Get transfer stats for a given time range. */
+  getStats(range: StatsTimeRange): TransferStats {
+    if (!this.statsCollector) {
+      return { points: [], totalUploadBytes: 0, totalDownloadBytes: 0, totalFilesTransferred: 0, peakUploadBytesPerSec: 0, peakDownloadBytesPerSec: 0 }
+    }
+    return this.statsCollector.getStats(range)
+  }
+
+  /** Get the current-minute realtime data point. */
+  getRealtimePoint(): TransferDataPoint {
+    if (!this.statsCollector) {
+      return { timestamp: Date.now(), uploadBytes: 0, downloadBytes: 0, filesTransferred: 0 }
+    }
+    return this.statsCollector.getRealtimePoint()
+  }
+
+  private async autoAdjustThrottle(): Promise<void> {
+    try {
+      const cpuUsage = await sampleCpuUsage(500)
+      const fraction = computeAutoFraction(cpuUsage)
+      // Use a baseline of 10 MB/s and scale down
+      const baseRate = 10 * 1024 * 1024
+      const rate = Math.round(baseRate * fraction)
+      this.uploadThrottler.setRate(rate)
+      this.downloadThrottler.setRate(rate)
+    } catch {
+      // Silently ignore CPU sampling errors
+    }
+  }
+
   async start(): Promise<void> {
     if (this.running) return
     this.running = true
@@ -103,6 +179,7 @@ export class SyncEngine {
 
     // Open database
     this.metadataStore.open(this.options.dbPath)
+    this.statsCollector = new StatsCollector(this.metadataStore)
     this.logger.info('MetadataStore opened', { dbPath: this.options.dbPath })
 
     // Start file watcher if we have paths
@@ -135,6 +212,11 @@ export class SyncEngine {
     if (!this.running) return
     this.running = false
     this.paused = false
+
+    if (this.autoThrottleTimer) {
+      clearInterval(this.autoThrottleTimer)
+      this.autoThrottleTimer = null
+    }
 
     if (this.manifestBroadcastTimer) {
       clearTimeout(this.manifestBroadcastTimer)
@@ -250,6 +332,10 @@ export class SyncEngine {
     this.paused = false
     if (this.manifestBroadcastTimer) {
       clearTimeout(this.manifestBroadcastTimer)
+    }
+    if (this.autoThrottleTimer) {
+      clearInterval(this.autoThrottleTimer)
+      this.autoThrottleTimer = null
     }
     this.metadataStore.close()
   }
@@ -524,14 +610,17 @@ export class SyncEngine {
       this.totalBytes += data.length
 
       for (let i = 0; i < chunks.length; i++) {
+        await this.uploadThrottler.consume(chunks[i].length)
         const chunkMsg = createFileDataMessage(requestId, i, chunks[i])
         this.peerManager.sendTo(fromDeviceId, chunkMsg)
+        this.statsCollector?.recordUpload(chunks[i].length)
       }
 
       const endMsg = createFileDataEndMessage(requestId, chunks.length, checksum)
       this.peerManager.sendTo(fromDeviceId, endMsg)
 
       this.transferredBytes += data.length
+      this.statsCollector?.recordFileTransferred()
       this.logger.debug('Sent file', { relativePath: payload.relativePath, chunks: chunks.length })
     } catch (err) {
       this.logger.error('Failed to send file', { path: payload.relativePath, error: String(err) })
@@ -545,7 +634,9 @@ export class SyncEngine {
     const pending = this.pendingReceives.get(payload.requestId)
     if (!pending) return
 
-    pending.chunks.set(payload.chunkIndex, Buffer.from(payload.data, 'base64'))
+    const chunkBuf = Buffer.from(payload.data, 'base64')
+    pending.chunks.set(payload.chunkIndex, chunkBuf)
+    this.statsCollector?.recordDownload(chunkBuf.length)
   }
 
   private async handleFileDataEnd(
@@ -623,6 +714,7 @@ export class SyncEngine {
       this.activeJobs = Math.max(0, this.activeJobs - 1)
       this.completedJobs++
       this.transferredBytes += data.length
+      this.statsCollector?.recordFileTransferred()
       this.emitStatusChange()
 
       this.options.onEvent({

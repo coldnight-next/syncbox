@@ -1,0 +1,8 @@
+version: 0.2.0
+files:
+  - url: Syncbox-0.2.0-x64-setup.exe
+    sha512: A0lNvhOhTNPdmtoDdpcXjKl07lOE3/XmJr8EzyP5f/FZ6AUMidguE7YwpHlsSfVNuwg0brEeURVdm0qS+YxHsg==
+    size: 86136280
+path: Syncbox-0.2.0-x64-setup.exe
+sha512: A0lNvhOhTNPdmtoDdpcXjKl07lOE3/XmJr8EzyP5f/FZ6AUMidguE7YwpHlsSfVNuwg0brEeURVdm0qS+YxHsg==
+releaseDate: '2026-02-28T02:46:39.568Z'

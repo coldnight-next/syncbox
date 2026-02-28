@@ -40,3 +40,12 @@ npm-debug.log*
 
 # Electron builder
 release/
+
+# Code signing certificates — NEVER commit these
+certs/
+*.pfx
+*.p12
+
+# Website release binaries (too large for git, hosted on GitHub Releases)
+website/releases/*.exe
+website/releases/*.msi
