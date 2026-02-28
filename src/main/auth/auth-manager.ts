@@ -19,7 +19,8 @@ export class AuthManager {
   private refreshTimer: ReturnType<typeof setTimeout> | null = null
   private logger: Logger
   private clerkClient: ReturnType<typeof createClerkClient>
-  private publishableKey: string
+  private frontendApi: string
+  private oauthClientId: string
   private redirectUri: string
   private eventCallback: (event: AuthEvent) => void
   private stateCallback: (state: AuthState) => void
@@ -27,6 +28,7 @@ export class AuthManager {
   constructor(options: {
     publishableKey: string
     secretKey: string
+    oauthClientId: string
     redirectUri: string
     logger: Logger
     onEvent: (event: AuthEvent) => void
@@ -34,12 +36,21 @@ export class AuthManager {
   }) {
     this.store = new Store<AuthStoreSchema>({ name: 'auth', encryptionKey: 'syncbox-auth' })
     this.logger = options.logger
-    this.publishableKey = options.publishableKey
+    this.frontendApi = AuthManager.decodeFrontendApi(options.publishableKey)
+    this.oauthClientId = options.oauthClientId
     this.redirectUri = options.redirectUri
     this.eventCallback = options.onEvent
     this.stateCallback = options.onStateChange
 
     this.clerkClient = createClerkClient({ secretKey: options.secretKey })
+  }
+
+  /** Decode the Clerk publishable key to get the frontend API domain */
+  private static decodeFrontendApi(publishableKey: string): string {
+    const encoded = publishableKey.replace('pk_test_', '').replace('pk_live_', '')
+    const decoded = Buffer.from(encoded, 'base64url').toString()
+    // Strip trailing '$' that Clerk adds as a separator
+    return decoded.replace(/\$$/, '')
   }
 
   async initialize(): Promise<void> {
@@ -73,26 +84,27 @@ export class AuthManager {
 
     const callbackPromise = startCallbackServer(state, this.logger)
 
-    // Extract Clerk frontend API from publishable key
-    const frontendApi = this.publishableKey.replace('pk_test_', '').replace('pk_live_', '')
-    const authorizeUrl = new URL(`https://${frontendApi}/oauth/authorize`)
+    const authorizeUrl = new URL(`https://${this.frontendApi}/oauth/authorize`)
     authorizeUrl.searchParams.set('response_type', 'code')
+    authorizeUrl.searchParams.set('client_id', this.oauthClientId)
     authorizeUrl.searchParams.set('redirect_uri', this.redirectUri)
     authorizeUrl.searchParams.set('code_challenge', codeChallenge)
     authorizeUrl.searchParams.set('code_challenge_method', 'S256')
     authorizeUrl.searchParams.set('state', state)
 
+    this.logger.info('Opening browser for OAuth', { authorizeUrl: authorizeUrl.origin + authorizeUrl.pathname })
     await shell.openExternal(authorizeUrl.toString())
 
     try {
       const { code } = await callbackPromise
 
       // Exchange code for tokens
-      const tokenResponse = await fetch(`https://${frontendApi}/oauth/token`, {
+      const tokenResponse = await fetch(`https://${this.frontendApi}/oauth/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
           grant_type: 'authorization_code',
+          client_id: this.oauthClientId,
           code,
           redirect_uri: this.redirectUri,
           code_verifier: codeVerifier,
@@ -268,12 +280,12 @@ export class AuthManager {
     const tokens = this.store.get('tokens')
     if (!tokens?.refreshToken) throw new Error('No refresh token')
 
-    const frontendApi = this.publishableKey.replace('pk_test_', '').replace('pk_live_', '')
-    const resp = await fetch(`https://${frontendApi}/oauth/token`, {
+    const resp = await fetch(`https://${this.frontendApi}/oauth/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
+        client_id: this.oauthClientId,
         refresh_token: tokens.refreshToken,
       }),
     })

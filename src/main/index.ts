@@ -177,12 +177,14 @@ void app.whenReady().then(async () => {
   // Init Auth — electron-vite exposes MAIN_VITE_* env vars via import.meta.env
   const publishableKey = import.meta.env.MAIN_VITE_CLERK_PUBLISHABLE_KEY ?? ''
   const secretKey = import.meta.env.MAIN_VITE_CLERK_SECRET_KEY ?? ''
+  const oauthClientId = import.meta.env.MAIN_VITE_CLERK_OAUTH_CLIENT_ID ?? ''
   const redirectUri = import.meta.env.MAIN_VITE_CLERK_REDIRECT_URI ?? 'http://127.0.0.1:19876/callback'
 
-  if (publishableKey && secretKey) {
+  if (publishableKey && secretKey && oauthClientId) {
     authManager = new AuthManager({
       publishableKey,
       secretKey,
+      oauthClientId,
       redirectUri,
       logger: createLogger('auth'),
       onEvent: (event: AuthEvent) => {
