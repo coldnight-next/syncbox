@@ -22,10 +22,11 @@ export function initAutoUpdater(win: BrowserWindow): void {
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
 
-  // Point at Vercel-hosted releases instead of GitHub
+  // Use GitHub Releases for update distribution
   autoUpdater.setFeedURL({
-    provider: 'generic',
-    url: 'https://syncbox.vercel.app/releases',
+    provider: 'github',
+    owner: 'coldnight-next',
+    repo: 'syncbox',
   })
 
   autoUpdater.on('checking-for-update', () => {
