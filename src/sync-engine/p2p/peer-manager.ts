@@ -105,7 +105,10 @@ export class PeerManager {
         }
         this.discoveredPeers.set(deviceId, peer)
         this.options.onEvent({ type: 'peer-discovered', peer })
+        // Relay peers are already authenticated via JWT at the relay server
+        this.options.onEvent({ type: 'peer-authenticated', deviceId })
         this.options.onEvent({ type: 'peer-connected', deviceId })
+        this.options.logger.info('Relay peer joined', { deviceId })
       },
       onPeerLeft: (deviceId) => {
         this.relayPeers.delete(deviceId)
@@ -116,10 +119,14 @@ export class PeerManager {
         this.options.onEvent({ type: 'peer-disconnected', deviceId })
       },
       onMessage: (msg) => {
-        // Find which relay peer sent this (in relay mode, messages come through broadcast)
-        // The msg should contain sender info — forward to the sync engine
-        // For relay, we use a convention that sender deviceId is in the message
-        this.options.onMessage('relay', msg)
+        // Relay messages are wrapped: { from: deviceId, relay: true, msg: PeerMessage }
+        const envelope = msg as unknown as { from?: string; relay?: boolean; msg?: PeerMessage }
+        if (envelope.relay && envelope.from && envelope.msg) {
+          this.options.onMessage(envelope.from, envelope.msg)
+        } else {
+          // Fallback for unwrapped messages
+          this.options.onMessage('relay', msg)
+        }
       },
       onClose: () => {
         this.relayPeers.clear()
@@ -144,12 +151,27 @@ export class PeerManager {
 
   getConnectedPeers(): PeerInfo[] {
     const connected: PeerInfo[] = []
+    const seen = new Set<string>()
+
+    // LAN connections
     for (const [deviceId, conn] of this.connections) {
       if (conn.isAuthenticated()) {
+        const peer = this.discoveredPeers.get(deviceId)
+        if (peer) {
+          connected.push(peer)
+          seen.add(deviceId)
+        }
+      }
+    }
+
+    // Relay peers (authenticated via JWT)
+    for (const deviceId of this.relayPeers) {
+      if (!seen.has(deviceId)) {
         const peer = this.discoveredPeers.get(deviceId)
         if (peer) connected.push(peer)
       }
     }
+
     return connected
   }
 
@@ -177,9 +199,9 @@ export class PeerManager {
       conn.send(msg)
       return
     }
-    // Fall back to relay
+    // Fall back to relay — wrap with sender identity
     if (this.relayConnection && this.relayPeers.has(deviceId)) {
-      this.relayConnection.send(msg)
+      this.relayConnection.send({ from: this.options.deviceId, relay: true, msg } as unknown as PeerMessage)
     }
   }
 
@@ -194,9 +216,9 @@ export class PeerManager {
       }
     }
 
-    // Also send via relay (relay broadcasts to all peers in the room)
+    // Also send via relay — wrap with sender identity
     if (this.relayConnection?.isConnected()) {
-      this.relayConnection.send(msg)
+      this.relayConnection.send({ from: this.options.deviceId, relay: true, msg } as unknown as PeerMessage)
     }
   }
 
