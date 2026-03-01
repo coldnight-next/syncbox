@@ -1,8 +1,8 @@
-version: 0.3.9
+version: 0.4.0
 files:
-  - url: Syncbox-0.3.9-x64-setup.exe
-    sha512: wfawyFuWyRkIkHV0fSkULS9d7xIp60R7S81CfuGQhkGSYPDjJP6ei738K9SOE+PETxH9MrN0KgEQyOYVBg0h3Q==
-    size: 86137789
-path: Syncbox-0.3.9-x64-setup.exe
-sha512: wfawyFuWyRkIkHV0fSkULS9d7xIp60R7S81CfuGQhkGSYPDjJP6ei738K9SOE+PETxH9MrN0KgEQyOYVBg0h3Q==
-releaseDate: '2026-03-01T20:36:15.506Z'
+  - url: Syncbox-0.4.0-x64-setup.exe
+    sha512: b/Bav38RyuZPF2jzqKROLGzgAf+53ZhWLPTABRTW8V/+DCEh0EtgDmb6yQdZOtexS8USiIPYbiXxeNuRRpQKAw==
+    size: 86138883
+path: Syncbox-0.4.0-x64-setup.exe
+sha512: b/Bav38RyuZPF2jzqKROLGzgAf+53ZhWLPTABRTW8V/+DCEh0EtgDmb6yQdZOtexS8USiIPYbiXxeNuRRpQKAw==
+releaseDate: '2026-03-01T21:02:51.882Z'
