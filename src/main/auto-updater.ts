@@ -1,4 +1,4 @@
-import { autoUpdater } from 'electron-updater'
+import { autoUpdater, NsisUpdater } from 'electron-updater'
 import { BrowserWindow } from 'electron'
 import log from 'electron-log'
 
@@ -21,6 +21,12 @@ export function initAutoUpdater(win: BrowserWindow): void {
   // Fully automatic: download immediately when available, install on quit
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
+
+  // Skip Windows Authenticode signature verification for unsigned builds.
+  // Integrity is still verified via SHA-512 checksum in latest.yml.
+  if (autoUpdater instanceof NsisUpdater) {
+    autoUpdater.verifyUpdateCodeSignature = () => Promise.resolve(null)
+  }
 
   // Use GitHub Releases for update distribution
   autoUpdater.setFeedURL({

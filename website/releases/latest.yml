@@ -1,8 +1,8 @@
-version: 0.3.0
+version: 0.3.1
 files:
-  - url: Syncbox-0.3.0-x64-setup.exe
+  - url: Syncbox-0.3.1-x64-setup.exe
     sha512: PqjFCzJ///BMs1KOyghTPpPL/rfWGYld16m63ewEd+kPebwHuZ9wxTBRr+MI3xafRAYrQVbnRlcRlciPY2MrWQ==
     size: 86137180
-path: Syncbox-0.3.0-x64-setup.exe
+path: Syncbox-0.3.1-x64-setup.exe
 sha512: PqjFCzJ///BMs1KOyghTPpPL/rfWGYld16m63ewEd+kPebwHuZ9wxTBRr+MI3xafRAYrQVbnRlcRlciPY2MrWQ==
 releaseDate: '2026-03-01T07:24:00.000Z'
