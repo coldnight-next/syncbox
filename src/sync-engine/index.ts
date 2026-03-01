@@ -368,6 +368,8 @@ export class SyncEngine {
       await this.scanDirectory(syncRoot, syncRoot)
     }
     this.logger.info('Initial scan complete')
+    // Broadcast manifest to peers so they know what files we have
+    this.broadcastManifest()
   }
 
   private async scanDirectory(dir: string, syncRoot: string): Promise<void> {
