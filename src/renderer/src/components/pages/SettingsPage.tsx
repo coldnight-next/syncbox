@@ -275,7 +275,7 @@ export function SettingsPage(): React.JSX.Element {
           <div className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500">Version</span>
-              <span className="font-medium text-gray-900">0.2.0</span>
+              <span className="font-medium text-gray-900">{__APP_VERSION__}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Platform</span>

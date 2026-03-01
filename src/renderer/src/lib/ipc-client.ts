@@ -12,6 +12,8 @@ declare global {
   interface Window {
     syncboxApi: SyncboxApi
   }
+  /** Injected by Vite at build time from package.json */
+  const __APP_VERSION__: string
 }
 
 export const ipc = window.syncboxApi
