@@ -8,9 +8,10 @@ import {
   createFileRequestMessage,
   createFileDataMessage,
   createFileDataEndMessage,
+  createFolderConfigMessage,
   CHUNK_SIZE,
 } from '../../../../src/sync-engine/p2p/protocol'
-import type { PeerMessage, FileManifestEntry } from '../../../../src/shared/types/peer'
+import type { PeerMessage, FileManifestEntry, FolderConfigPayload } from '../../../../src/shared/types/peer'
 
 describe('protocol', () => {
   describe('serializeMessage / deserializeMessage', () => {
@@ -84,7 +85,16 @@ describe('protocol', () => {
     it('should create a file request message', () => {
       const msg = createFileRequestMessage('docs/readme.md')
       expect(msg.type).toBe('file-request')
-      expect((msg.payload as { relativePath: string }).relativePath).toBe('docs/readme.md')
+      const payload = msg.payload as { relativePath: string; syncRoot?: string }
+      expect(payload.relativePath).toBe('docs/readme.md')
+    })
+
+    it('should create a file request message with syncRoot', () => {
+      const msg = createFileRequestMessage('docs/readme.md', '/sync/root')
+      expect(msg.type).toBe('file-request')
+      const payload = msg.payload as { relativePath: string; syncRoot?: string }
+      expect(payload.relativePath).toBe('docs/readme.md')
+      expect(payload.syncRoot).toBe('/sync/root')
     })
 
     it('should create file data messages', () => {
@@ -103,6 +113,39 @@ describe('protocol', () => {
       const payload = msg.payload as { requestId: string; totalChunks: number; checksum: string }
       expect(payload.totalChunks).toBe(3)
       expect(payload.checksum).toBe('sha256hash')
+    })
+
+    it('should create a folder config message', () => {
+      const folders = ['/path/to/folder1', '/path/to/folder2']
+      const msg = createFolderConfigMessage(folders, 'full-sync')
+      expect(msg.type).toBe('folder-config')
+      expect(msg.id).toBeTruthy()
+      const payload = msg.payload as FolderConfigPayload
+      expect(payload.folders).toEqual(folders)
+      expect(payload.action).toBe('full-sync')
+    })
+
+    it('should create a folder config message with add action', () => {
+      const msg = createFolderConfigMessage(['/new/folder'], 'add')
+      const payload = msg.payload as FolderConfigPayload
+      expect(payload.action).toBe('add')
+      expect(payload.folders).toEqual(['/new/folder'])
+    })
+
+    it('should create a folder config message with remove action', () => {
+      const msg = createFolderConfigMessage(['/old/folder'], 'remove')
+      const payload = msg.payload as FolderConfigPayload
+      expect(payload.action).toBe('remove')
+      expect(payload.folders).toEqual(['/old/folder'])
+    })
+
+    it('should include syncRoot in manifest entries', () => {
+      const entries: FileManifestEntry[] = [
+        { relativePath: 'test.txt', size: 100, modifiedAt: Date.now(), checksum: 'abc', clock: { dev1: 1 }, syncRoot: '/sync/root' },
+      ]
+      const msg = createManifestMessage(entries)
+      const payload = msg.payload as FileManifestEntry[]
+      expect(payload[0].syncRoot).toBe('/sync/root')
     })
   })
 })

@@ -8,7 +8,7 @@ import type {
   ConflictResolution,
   CoalescingConfig,
 } from '../shared/types/sync'
-import type { PeerMessage, FileManifestEntry } from '../shared/types/peer'
+import type { PeerMessage, FileManifestEntry, FolderConfigPayload } from '../shared/types/peer'
 import type { AppConfig } from '../shared/types/config'
 import type { TransferStats, TransferDataPoint, StatsTimeRange } from '../shared/types/stats'
 import { relativeSyncPath } from '../shared/utils/paths'
@@ -21,6 +21,7 @@ import {
   createFileRequestMessage,
   createFileDataMessage,
   createFileDataEndMessage,
+  createFolderConfigMessage,
   splitFileIntoChunks,
   reassembleChunks,
 } from './p2p/protocol'
@@ -47,11 +48,13 @@ export interface SyncEngineOptions {
   logger?: Logger
   onEvent: (event: SyncEvent) => void
   onStatusChange: (status: SyncStatus) => void
+  onFolderConfigReceived?: (payload: FolderConfigPayload) => void
 }
 
 /** Tracks in-flight file receives from peers */
 interface PendingReceive {
   relativePath: string
+  syncRoot: string
   chunks: Map<number, Buffer>
   checksum: string | null
   totalChunks: number | null
@@ -314,7 +317,7 @@ export class SyncEngine {
         void this.handleIncomingManifest(fromDeviceId, msg.payload as FileManifestEntry[])
         break
       case 'file-request':
-        void this.handleFileRequest(fromDeviceId, msg.payload as { relativePath: string }, msg.id)
+        void this.handleFileRequest(fromDeviceId, msg.payload as { relativePath: string; syncRoot?: string }, msg.id)
         break
       case 'file-data':
         this.handleFileData(msg.payload as { requestId: string; chunkIndex: number; data: string }, fromDeviceId)
@@ -322,9 +325,23 @@ export class SyncEngine {
       case 'file-data-end':
         void this.handleFileDataEnd(msg.payload as { requestId: string; totalChunks: number; checksum: string })
         break
+      case 'folder-config':
+        if (this.options.onFolderConfigReceived) {
+          this.options.onFolderConfigReceived(msg.payload as FolderConfigPayload)
+        }
+        break
       default:
         break
     }
+  }
+
+  /** Broadcast folder config to all connected peers. */
+  broadcastFolderConfig(action: FolderConfigPayload['action'], folders?: string[]): void {
+    if (!this.peerManager) return
+    const foldersToSend = folders ?? this.options.watchPaths
+    const msg = createFolderConfigMessage(foldersToSend, action)
+    this.peerManager.broadcast(msg)
+    this.logger.info('Broadcast folder config', { action, folders: foldersToSend })
   }
 
   dispose(): void {
@@ -488,6 +505,7 @@ export class SyncEngine {
           modifiedAt: meta.modifiedAt,
           checksum: meta.checksum,
           clock,
+          syncRoot,
         })
       }
     }
@@ -500,7 +518,7 @@ export class SyncEngine {
     })
 
     for (const remoteEntry of remoteEntries) {
-      const syncRoot = this.options.watchPaths[0]
+      const syncRoot = remoteEntry.syncRoot ?? this.options.watchPaths[0]
       if (!syncRoot) continue
 
       const localClock = this.metadataStore.getVectorClock(remoteEntry.relativePath)
@@ -508,7 +526,7 @@ export class SyncEngine {
 
       if (!localClock) {
         // We don't have this file — request it
-        this.requestFile(fromDeviceId, remoteEntry.relativePath)
+        this.requestFile(fromDeviceId, remoteEntry.relativePath, syncRoot)
         continue
       }
 
@@ -521,7 +539,7 @@ export class SyncEngine {
 
       if (comparison === 'before') {
         // Remote is newer — request file
-        this.requestFile(fromDeviceId, remoteEntry.relativePath)
+        this.requestFile(fromDeviceId, remoteEntry.relativePath, syncRoot)
         continue
       }
 
@@ -559,7 +577,7 @@ export class SyncEngine {
 
       if (result.action === 'keep-remote' || result.action === 'keep-both') {
         // Request the remote version
-        this.requestFile(fromDeviceId, remoteEntry.relativePath)
+        this.requestFile(fromDeviceId, remoteEntry.relativePath, syncRoot)
       }
       // For keep-local or ask, we don't fetch the remote file
 
@@ -569,17 +587,19 @@ export class SyncEngine {
     }
   }
 
-  private requestFile(fromDeviceId: string, relativePath: string): void {
+  private requestFile(fromDeviceId: string, relativePath: string, syncRoot?: string): void {
     if (!this.peerManager) return
 
     this.activeJobs++
     this.emitStatusChange()
 
-    const msg = createFileRequestMessage(relativePath)
+    const resolvedRoot = syncRoot ?? this.options.watchPaths[0] ?? ''
+    const msg = createFileRequestMessage(relativePath, resolvedRoot)
 
     // Set up pending receive tracker
     this.pendingReceives.set(msg.id, {
       relativePath,
+      syncRoot: resolvedRoot,
       chunks: new Map(),
       checksum: null,
       totalChunks: null,
@@ -592,12 +612,12 @@ export class SyncEngine {
 
   private async handleFileRequest(
     fromDeviceId: string,
-    payload: { relativePath: string },
+    payload: { relativePath: string; syncRoot?: string },
     requestId: string,
   ): Promise<void> {
     if (!this.peerManager) return
 
-    const syncRoot = this.options.watchPaths[0]
+    const syncRoot = payload.syncRoot ?? this.options.watchPaths[0]
     if (!syncRoot) return
 
     const fullPath = path.join(syncRoot, payload.relativePath)
@@ -681,7 +701,7 @@ export class SyncEngine {
     }
 
     // Write file to disk
-    const syncRoot = this.options.watchPaths[0]
+    const syncRoot = pending.syncRoot || this.options.watchPaths[0]
     if (!syncRoot) return
 
     const fullPath = path.join(syncRoot, pending.relativePath)

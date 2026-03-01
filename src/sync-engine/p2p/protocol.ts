@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import type { PeerMessage, FileManifestEntry } from '../../shared/types/peer'
+import type { PeerMessage, FileManifestEntry, FolderConfigPayload } from '../../shared/types/peer'
 
 const CHUNK_SIZE = 64 * 1024 // 64KB
 
@@ -38,11 +38,22 @@ export function createManifestMessage(
   }
 }
 
-export function createFileRequestMessage(relativePath: string): PeerMessage {
+export function createFileRequestMessage(relativePath: string, syncRoot?: string): PeerMessage {
   return {
     type: 'file-request',
     id: createMessageId(),
-    payload: { relativePath },
+    payload: { relativePath, syncRoot },
+  }
+}
+
+export function createFolderConfigMessage(
+  folders: string[],
+  action: FolderConfigPayload['action'],
+): PeerMessage {
+  return {
+    type: 'folder-config',
+    id: createMessageId(),
+    payload: { folders, action } satisfies FolderConfigPayload,
   }
 }
 

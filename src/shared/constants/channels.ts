@@ -59,6 +59,7 @@ export const IPC_EVENTS = {
   PEER_EVENT: 'peer:event',
   PEER_LIST_UPDATED: 'peer:list-updated',
   UPDATE_AVAILABLE: 'update:available',
+  SYNC_FOLDERS_CHANGED: 'sync:folders-changed',
   STATS_REALTIME_UPDATE: 'stats:realtime-update',
   UPDATE_NOT_AVAILABLE: 'update:not-available',
   UPDATE_PROGRESS: 'update:progress',

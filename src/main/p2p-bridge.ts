@@ -35,6 +35,7 @@ export function createPeerManager(options: {
   verifyFn: (data: Buffer | string, signature: Buffer, publicKeyHex: string) => boolean
   getMainWindow: () => BrowserWindow | null
   onMessage: (deviceId: string, msg: PeerMessage) => void
+  onPeerAuthenticated?: (deviceId: string) => void
 }): PeerManager {
   const manager = new PeerManager({
     deviceId: options.deviceId,
@@ -49,6 +50,9 @@ export function createPeerManager(options: {
       if (win && !win.isDestroyed()) {
         win.webContents.send('peer:event', event)
         win.webContents.send('peer:list-updated', manager.getDiscoveredPeers())
+      }
+      if (event.type === 'peer-authenticated' && options.onPeerAuthenticated) {
+        options.onPeerAuthenticated(event.deviceId)
       }
     },
     onMessage: options.onMessage,

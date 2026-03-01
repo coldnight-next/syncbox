@@ -17,6 +17,10 @@ export function FoldersPage({ status }: FoldersPageProps): React.JSX.Element {
 
   useEffect(() => {
     refreshFolders()
+    const unsubscribe = ipc.on('sync:folders-changed', () => {
+      refreshFolders()
+    })
+    return unsubscribe
   }, [refreshFolders])
 
   async function handleAddFolder(): Promise<void> {

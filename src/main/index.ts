@@ -8,10 +8,12 @@ import { initLogging, createLogger } from './logging'
 import { initAutoUpdater, disposeAutoUpdater } from './auto-updater'
 import { AuthManager, getDeviceId, getPublicKeyHex, sign, verifySignature, getDeviceName } from './auth'
 import { createPeerManager, registerPeerHandlers } from './p2p-bridge'
+import fs from 'node:fs'
 import { SyncEngine } from '../sync-engine'
 import type { PeerManager } from '../sync-engine/p2p/peer-manager'
 import type { SyncEvent, SyncStatus } from '../shared/types/sync'
 import type { AuthState, AuthEvent } from '../shared/types/auth'
+import type { FolderConfigPayload } from '../shared/types/peer'
 import Store from 'electron-store'
 import type { AppConfig } from '../shared/types/config'
 import { DEFAULT_APP_CONFIG } from '../shared/types/config'
@@ -76,6 +78,10 @@ function startPeerSync(userId: string): void {
     onMessage: (_fromDeviceId, msg) => {
       syncEngine?.handlePeerMessage(_fromDeviceId, msg)
     },
+    onPeerAuthenticated: () => {
+      // Send our folder config to newly authenticated peer
+      syncEngine?.broadcastFolderConfig('full-sync')
+    },
   })
 
   syncEngine.setPeerManager(peerManager)
@@ -107,6 +113,42 @@ function persistFolders(): void {
   settingsStore.set('syncFolders', currentSyncFolders)
 }
 
+async function handleRemoteFolderConfig(payload: FolderConfigPayload): Promise<void> {
+  const { folders, action } = payload
+  logger.info('Received remote folder config', { action, folders })
+
+  if (action === 'full-sync' || action === 'add') {
+    let changed = false
+    for (const folder of folders) {
+      if (!currentSyncFolders.includes(folder)) {
+        // Create directory if it doesn't exist
+        fs.mkdirSync(folder, { recursive: true })
+        currentSyncFolders.push(folder)
+        changed = true
+      }
+    }
+    if (!changed) return
+  } else if (action === 'remove') {
+    const before = currentSyncFolders.length
+    currentSyncFolders = currentSyncFolders.filter((f) => !folders.includes(f))
+    if (currentSyncFolders.length === before) return
+  }
+
+  persistFolders()
+
+  // Restart sync engine with updated paths
+  if (syncEngine) {
+    await syncEngine.stop()
+    syncEngine.setWatchPaths(currentSyncFolders)
+    if (currentSyncFolders.length > 0) {
+      await syncEngine.start()
+    }
+  }
+
+  // Notify renderer so UI updates
+  sendToRenderer(IPC_EVENTS.SYNC_FOLDERS_CHANGED, currentSyncFolders)
+}
+
 function getAppConfig(): AppConfig {
   return settingsStore.get('config') ?? { ...DEFAULT_APP_CONFIG }
 }
@@ -130,10 +172,15 @@ async function addSyncFolder(folderPath: string): Promise<void> {
     await syncEngine.stop()
     syncEngine.setWatchPaths(currentSyncFolders)
     await syncEngine.start()
+    syncEngine.broadcastFolderConfig('add', [folderPath])
   }
 }
 
 async function removeSyncFolder(folderPath: string): Promise<void> {
+  if (syncEngine) {
+    syncEngine.broadcastFolderConfig('remove', [folderPath])
+  }
+
   currentSyncFolders = currentSyncFolders.filter((f) => f !== folderPath)
   persistFolders()
   logger.info('Sync folder removed', { folderPath, total: currentSyncFolders.length })
@@ -243,6 +290,9 @@ void app.whenReady().then(async () => {
     onStatusChange: (status: SyncStatus) => {
       sendToRenderer('sync:status', status)
       updateTrayStatus(status.state === 'syncing' ? 'Syncing...' : status.state === 'paused' ? 'Paused' : 'Idle')
+    },
+    onFolderConfigReceived: (payload: FolderConfigPayload) => {
+      void handleRemoteFolderConfig(payload)
     },
   })
 

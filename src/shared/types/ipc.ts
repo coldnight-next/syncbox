@@ -64,6 +64,7 @@ export interface IpcRendererEvents {
   'sync:status': SyncStatus
   'sync:event': SyncEvent
   'sync:progress': { filePath: string; percent: number }
+  'sync:folders-changed': string[]
   'auth:state-changed': AuthState
   'auth:event': AuthEvent
   'peer:event': PeerEvent

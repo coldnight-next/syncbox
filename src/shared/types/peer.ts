@@ -24,8 +24,14 @@ export type PeerMessageType =
   | 'file-data'
   | 'file-data-end'
   | 'ack'
+  | 'folder-config'
   | 'relay:peer-joined'
   | 'relay:peer-left'
+
+export interface FolderConfigPayload {
+  folders: string[]
+  action: 'full-sync' | 'add' | 'remove'
+}
 
 export interface PeerMessage {
   type: PeerMessageType
@@ -56,4 +62,5 @@ export interface FileManifestEntry {
   modifiedAt: number
   checksum: string
   clock: VectorClock
+  syncRoot?: string
 }
