@@ -1,6 +1,6 @@
 {
   "name": "syncbox",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "File sync desktop application",
   "author": "Syncbox",
   "main": "./out/main/index.js",

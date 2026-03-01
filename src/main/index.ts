@@ -262,17 +262,11 @@ void app.whenReady().then(async () => {
     await authManager.initialize()
     logger.info('AuthManager initialized')
 
-    // If AuthManager restored a session, start P2P immediately
-    const restoredState = authManager.getState()
-    if (restoredState.isAuthenticated && restoredState.userId) {
-      logger.info('Restored auth session, starting P2P', { userId: restoredState.userId })
-      startPeerSync(restoredState.userId)
-    }
   } else {
     logger.warn('Clerk keys not configured, auth disabled')
   }
 
-  // Init Sync Engine
+  // Init Sync Engine (must happen before startPeerSync which requires syncEngine)
   const userDataPath = app.getPath('userData')
 
   syncEngine = new SyncEngine({
@@ -301,6 +295,15 @@ void app.whenReady().then(async () => {
   })
 
   setTraySyncEngine(syncEngine)
+
+  // Now that syncEngine exists, start P2P if we have a restored auth session
+  if (authManager) {
+    const restoredState = authManager.getState()
+    if (restoredState.isAuthenticated && restoredState.userId) {
+      logger.info('Restored auth session, starting P2P', { userId: restoredState.userId })
+      startPeerSync(restoredState.userId)
+    }
+  }
 
   // Auto-start sync engine if folders are already configured
   if (currentSyncFolders.length > 0) {
