@@ -289,7 +289,7 @@ void app.whenReady().then(async () => {
       ignoredPatterns: ['*.tmp', '.git/**', 'node_modules/**', '.syncbox/**'],
       immediatePatterns: [],
     },
-    conflictStrategy: 'ask',
+    conflictStrategy: 'keep-newest',
     logger: createLogger('sync-engine'),
     onEvent: (event: SyncEvent) => {
       sendToRenderer('sync:event', event)

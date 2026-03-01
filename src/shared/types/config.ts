@@ -16,7 +16,7 @@ export interface AppConfig {
 export const DEFAULT_APP_CONFIG: AppConfig = {
   syncFolder: '',
   maxConcurrentTransfers: 4,
-  conflictStrategy: 'ask',
+  conflictStrategy: 'keep-newest',
   enableNotifications: true,
   autoStart: false,
   theme: 'system',
