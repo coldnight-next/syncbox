@@ -1,8 +1,8 @@
-version: 0.3.4
+version: 0.3.5
 files:
-  - url: Syncbox-0.3.4-x64-setup.exe
-    sha512: O38oyca9wc4jqcc8ec0qgod0WDYEVU1AadBsPTpKwA1i58BEwabzpgY/BJpoCI/VBYGefLeCFEH+SUXva74BfA==
-    size: 86137553
-path: Syncbox-0.3.4-x64-setup.exe
-sha512: O38oyca9wc4jqcc8ec0qgod0WDYEVU1AadBsPTpKwA1i58BEwabzpgY/BJpoCI/VBYGefLeCFEH+SUXva74BfA==
-releaseDate: '2026-03-01T12:29:31.371Z'
+  - url: Syncbox-0.3.5-x64-setup.exe
+    sha512: ICnAms2UnQ1Oo9pNYhZaEscfbS3l8CBMdn3d82STNR9vksXSAzr9K8zrnd7kz1e5nDL2OYb+Dw+aGRzRsbWmLw==
+    size: 86139590
+path: Syncbox-0.3.5-x64-setup.exe
+sha512: ICnAms2UnQ1Oo9pNYhZaEscfbS3l8CBMdn3d82STNR9vksXSAzr9K8zrnd7kz1e5nDL2OYb+Dw+aGRzRsbWmLw==
+releaseDate: '2026-03-01T12:47:15.464Z'

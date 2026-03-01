@@ -26,33 +26,39 @@ export class Discovery {
   }
 
   start(): void {
-    this.bonjour = new Bonjour()
+    try {
+      this.bonjour = new Bonjour()
 
-    // Advertise this device
-    this.bonjour.publish({
-      name: `syncbox-${this.options.deviceId}`,
-      type: SERVICE_TYPE,
-      protocol: SERVICE_PROTOCOL,
-      port: this.options.port,
-      txt: {
+      // Advertise this device
+      this.bonjour.publish({
+        name: `syncbox-${this.options.deviceId}`,
+        type: SERVICE_TYPE,
+        protocol: SERVICE_PROTOCOL,
+        port: this.options.port,
+        txt: {
+          deviceId: this.options.deviceId,
+          userId: this.options.userId,
+          deviceName: this.options.deviceName,
+        },
+      })
+
+      this.options.logger.info('mDNS service published', {
         deviceId: this.options.deviceId,
-        userId: this.options.userId,
-        deviceName: this.options.deviceName,
-      },
-    })
+        port: this.options.port,
+      })
 
-    this.options.logger.info('mDNS service published', {
-      deviceId: this.options.deviceId,
-      port: this.options.port,
-    })
+      // Browse for other devices
+      this.browser = this.bonjour.find(
+        { type: SERVICE_TYPE, protocol: SERVICE_PROTOCOL },
+        (service: Service) => this.handleServiceUp(service),
+      )
 
-    // Browse for other devices
-    this.browser = this.bonjour.find(
-      { type: SERVICE_TYPE, protocol: SERVICE_PROTOCOL },
-      (service: Service) => this.handleServiceUp(service),
-    )
-
-    this.browser.on('down', (service: Service) => this.handleServiceDown(service))
+      this.browser.on('down', (service: Service) => this.handleServiceDown(service))
+    } catch (err) {
+      this.options.logger.warn('mDNS discovery failed to start (LAN discovery unavailable)', {
+        error: String(err),
+      })
+    }
   }
 
   stop(): void {

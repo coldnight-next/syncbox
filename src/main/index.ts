@@ -90,17 +90,26 @@ function startPeerSync(userId: string): void {
 
   syncEngine.setPeerManager(peerManager)
   registerPeerHandlers(peerManager, getMainWindow)
-  peerManager.start()
+
+  try {
+    peerManager.start()
+  } catch (err) {
+    logger.error('PeerManager.start() failed', { error: String(err) })
+  }
   logger.info('PeerManager started', { deviceId, userId })
 
   // Start relay connection if configured
   const config = getAppConfig()
   const relayUrl = config.relayUrl || (import.meta.env.MAIN_VITE_RELAY_URL ?? '')
+  logger.info('Relay config', { relayUrl: relayUrl || '(empty)', hasAuthManager: !!authManager })
   if (relayUrl && authManager) {
     const token = authManager.getAccessToken()
+    logger.info('Relay token status', { hasToken: !!token })
     if (token) {
       peerManager.startRelay(relayUrl, token)
       logger.info('Relay connection started', { relayUrl })
+    } else {
+      logger.warn('No valid access token for relay, skipping relay connection')
     }
   }
 }
