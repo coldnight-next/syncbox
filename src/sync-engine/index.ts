@@ -7,6 +7,7 @@ import type {
   ConflictInfo,
   ConflictResolution,
   CoalescingConfig,
+  FolderStats,
 } from '../shared/types/sync'
 import type { PeerMessage, FileManifestEntry, FolderConfigPayload } from '../shared/types/peer'
 import type { AppConfig } from '../shared/types/config'
@@ -38,6 +39,7 @@ import { createNoopLogger } from './logger'
 import { TokenBucketThrottler } from './throttler'
 import { StatsCollector } from './stats-collector'
 import { sampleCpuUsage, computeAutoFraction } from './auto-throttle'
+import { computeManifestHash, readFolderState, writeFolderState } from './folder-state'
 
 export interface SyncEngineOptions {
   watchPaths: string[]
@@ -73,6 +75,10 @@ export class SyncEngine {
 
   // Track in-progress file transfers from peers
   private pendingReceives = new Map<string, PendingReceive>()
+
+  // Write suppression: maps resolved path → expiry timestamp.
+  // Prevents chokidar events from triggering sync for files we just wrote from peers.
+  private writeSuppressed = new Map<string, number>()
 
   // Debounce manifest broadcasts
   private manifestBroadcastTimer: ReturnType<typeof setTimeout> | null = null
@@ -151,6 +157,11 @@ export class SyncEngine {
       return { points: [], totalUploadBytes: 0, totalDownloadBytes: 0, totalFilesTransferred: 0, peakUploadBytesPerSec: 0, peakDownloadBytesPerSec: 0 }
     }
     return this.statsCollector.getStats(range)
+  }
+
+  /** Get file/folder/size stats for a watched folder. */
+  getFolderStats(folderPath: string): FolderStats {
+    return this.metadataStore.getFolderStats(folderPath)
   }
 
   /** Get the current-minute realtime data point. */
@@ -233,6 +244,7 @@ export class SyncEngine {
 
     this.metadataStore.close()
     this.pendingReceives.clear()
+    this.writeSuppressed.clear()
     this.logger.info('SyncEngine stopped')
     this.emitStatusChange()
   }
@@ -358,6 +370,7 @@ export class SyncEngine {
       clearInterval(this.autoThrottleTimer)
       this.autoThrottleTimer = null
     }
+    this.writeSuppressed.clear()
     this.metadataStore.close()
   }
 
@@ -366,6 +379,7 @@ export class SyncEngine {
   private async performInitialScan(): Promise<void> {
     for (const syncRoot of this.options.watchPaths) {
       await this.scanDirectory(syncRoot, syncRoot)
+      this.updateFolderState(syncRoot)
     }
     this.logger.info('Initial scan complete')
     // Broadcast manifest to peers so they know what files we have
@@ -430,6 +444,17 @@ export class SyncEngine {
   private async handleLocalFileEvent(eventType: string, filePath: string): Promise<void> {
     if (this.paused || !this.running) return
 
+    // Write suppression: skip events for files we just wrote from incoming sync
+    const resolved = path.resolve(filePath)
+    const suppressExpiry = this.writeSuppressed.get(resolved)
+    if (suppressExpiry !== undefined) {
+      if (Date.now() < suppressExpiry) {
+        this.logger.debug('Write-suppressed, skipping local event', { filePath })
+        return
+      }
+      this.writeSuppressed.delete(resolved)
+    }
+
     const syncRoot = this.findSyncRoot(filePath)
     if (!syncRoot) return
 
@@ -459,6 +484,7 @@ export class SyncEngine {
 
     // Debounce manifest broadcast to avoid flooding
     this.scheduleBroadcast()
+    this.updateFolderState(syncRoot)
   }
 
   private scheduleBroadcast(): void {
@@ -523,9 +549,36 @@ export class SyncEngine {
       entries: remoteEntries.length,
     })
 
+    // Group remote entries by syncRoot for manifest hash short-circuit
+    const byRoot = new Map<string, FileManifestEntry[]>()
+    for (const entry of remoteEntries) {
+      const root = entry.syncRoot ?? this.options.watchPaths[0] ?? ''
+      if (!root) continue
+      let list = byRoot.get(root)
+      if (!list) {
+        list = []
+        byRoot.set(root, list)
+      }
+      list.push(entry)
+    }
+
+    // Check manifest hash per folder — skip folders that are already in sync
+    const skippedRoots = new Set<string>()
+    for (const [root, entries] of byRoot) {
+      const remoteHash = computeManifestHash(entries)
+      const localState = readFolderState(root)
+      if (localState && localState.manifestHash === remoteHash) {
+        this.logger.debug('Manifest hash match, skipping folder', { root, hash: remoteHash })
+        skippedRoots.add(root)
+      }
+    }
+
     for (const remoteEntry of remoteEntries) {
       const syncRoot = remoteEntry.syncRoot ?? this.options.watchPaths[0]
       if (!syncRoot) continue
+
+      // Skip entries from folders whose hash already matches
+      if (skippedRoots.has(syncRoot)) continue
 
       const localClock = this.metadataStore.getVectorClock(remoteEntry.relativePath)
       const localMeta = this.findLocalMetadata(remoteEntry.relativePath)
@@ -717,6 +770,10 @@ export class SyncEngine {
       const dir = path.dirname(fullPath)
       fs.mkdirSync(dir, { recursive: true })
 
+      // Suppress chokidar event for this write (1500ms covers awaitWriteFinish + safety buffer)
+      const resolvedPath = path.resolve(fullPath)
+      this.writeSuppressed.set(resolvedPath, Date.now() + 1500)
+
       fs.writeFileSync(fullPath, data)
 
       const stat = fs.statSync(fullPath)
@@ -737,6 +794,9 @@ export class SyncEngine {
       const merged = mergeClock(localClock, remoteClock)
       this.metadataStore.setVectorClock(pending.relativePath, merged)
 
+      // Update folder state hash after successful receive
+      this.updateFolderState(syncRoot)
+
       this.activeJobs = Math.max(0, this.activeJobs - 1)
       this.completedJobs++
       this.transferredBytes += data.length
@@ -754,6 +814,8 @@ export class SyncEngine {
         size: data.length,
       })
     } catch (err) {
+      // Clean up suppression entry on error
+      this.writeSuppressed.delete(path.resolve(fullPath))
       this.logger.error('Failed to write received file', {
         path: pending.relativePath,
         error: String(err),
@@ -761,6 +823,22 @@ export class SyncEngine {
       this.activeJobs = Math.max(0, this.activeJobs - 1)
       this.failedJobs++
       this.emitStatusChange()
+    }
+  }
+
+  private updateFolderState(folderPath: string): void {
+    try {
+      const entries = this.metadataStore.getFileChecksums(folderPath)
+      const hash = computeManifestHash(entries)
+      writeFolderState(folderPath, {
+        version: 1,
+        deviceId: this.options.deviceId,
+        lastSyncedAt: Date.now(),
+        manifestHash: hash,
+        fileCount: entries.length,
+      })
+    } catch (err) {
+      this.logger.error('Failed to update folder state', { folderPath, error: String(err) })
     }
   }
 

@@ -1,4 +1,4 @@
-import type { SyncStatus, SyncEvent, ConflictInfo, ConflictResolution } from './sync'
+import type { SyncStatus, SyncEvent, ConflictInfo, ConflictResolution, FolderStats } from './sync'
 import type { AppConfig } from './config'
 import type { StructuredLogEntry } from './logging'
 import type { AuthState, AuthEvent, DeviceInfo } from './auth'
@@ -21,6 +21,7 @@ export interface IpcMainHandlers {
   'sync:add-folder': { params: [folderPath: string]; return: void }
   'sync:remove-folder': { params: [folderPath: string]; return: void }
   'sync:get-folders': { params: []; return: string[] }
+  'sync:get-folder-stats': { params: [folderPath: string]; return: FolderStats }
 
   // Config
   'config:get': { params: []; return: AppConfig }

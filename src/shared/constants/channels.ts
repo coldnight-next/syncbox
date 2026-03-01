@@ -11,6 +11,7 @@ export const IPC_CHANNELS = {
   SYNC_ADD_FOLDER: 'sync:add-folder',
   SYNC_REMOVE_FOLDER: 'sync:remove-folder',
   SYNC_GET_FOLDERS: 'sync:get-folders',
+  SYNC_GET_FOLDER_STATS: 'sync:get-folder-stats',
 
   // Config
   CONFIG_GET: 'config:get',

@@ -13,6 +13,7 @@ import { initAutoUpdater, disposeAutoUpdater } from './auto-updater'
 import { AuthManager, getDeviceId, getPublicKeyHex, sign, verifySignature, getDeviceName } from './auth'
 import { createPeerManager, registerPeerHandlers } from './p2p-bridge'
 import fs from 'node:fs'
+import path from 'node:path'
 import { SyncEngine } from '../sync-engine'
 import type { PeerManager } from '../sync-engine/p2p/peer-manager'
 import type { SyncEvent, SyncStatus } from '../shared/types/sync'
@@ -136,6 +137,11 @@ async function handleRemoteFolderConfig(payload: FolderConfigPayload): Promise<v
       if (!currentSyncFolders.includes(folder)) {
         // Create directory if it doesn't exist
         fs.mkdirSync(folder, { recursive: true })
+        try {
+          fs.mkdirSync(path.join(folder, '.syncbox'), { recursive: true })
+        } catch {
+          // Non-fatal
+        }
         currentSyncFolders.push(folder)
         changed = true
       }
@@ -179,6 +185,13 @@ async function addSyncFolder(folderPath: string): Promise<void> {
   if (currentSyncFolders.includes(folderPath)) return
   currentSyncFolders.push(folderPath)
   persistFolders()
+
+  try {
+    fs.mkdirSync(path.join(folderPath, '.syncbox'), { recursive: true })
+  } catch {
+    // Non-fatal — folder state will be created later by sync engine
+  }
+
   logger.info('Sync folder added', { folderPath, total: currentSyncFolders.length })
 
   if (syncEngine) {

@@ -121,3 +121,10 @@ export interface CoalescingConfig {
   ignoredPatterns: string[]
   immediatePatterns: string[]
 }
+
+export interface FolderStats {
+  path: string
+  fileCount: number
+  folderCount: number
+  totalSizeBytes: number
+}

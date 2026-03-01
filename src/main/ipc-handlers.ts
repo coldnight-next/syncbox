@@ -85,6 +85,10 @@ export function registerIpcHandlers(
     return callbacks?.getSyncFolders?.() ?? []
   })
 
+  ipcMain.handle(IPC_CHANNELS.SYNC_GET_FOLDER_STATS, (_event, folderPath: string) => {
+    return syncEngine.getFolderStats(folderPath)
+  })
+
   // Config
   ipcMain.handle(IPC_CHANNELS.CONFIG_GET, () => {
     const config = callbacks?.getConfig?.() ?? { ...DEFAULT_APP_CONFIG }

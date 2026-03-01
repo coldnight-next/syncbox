@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3'
 import type { VectorClock } from '../shared/types/peer'
+import type { FolderStats } from '../shared/types/sync'
 
 export interface FileMetadata {
   path: string
@@ -165,6 +166,57 @@ export class MetadataStore {
            files_transferred = files_transferred + excluded.files_transferred`,
       )
       .run(timestamp, uploadBytes, downloadBytes, filesTransferred)
+  }
+
+  getFolderStats(folderPath: string): FolderStats {
+    if (!this.db) throw new Error('Database not opened')
+
+    // Normalize: ensure folderPath ends without trailing slash for consistent LIKE matching
+    const normalized = folderPath.replace(/[\\/]+$/, '')
+
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) as fileCount, COALESCE(SUM(size), 0) as totalSizeBytes
+         FROM file_metadata WHERE path LIKE ? || '/%'`,
+      )
+      .get(normalized) as { fileCount: number; totalSizeBytes: number }
+
+    // Count distinct subdirectories by extracting unique dir prefixes from file paths
+    const files = this.db
+      .prepare(`SELECT path FROM file_metadata WHERE path LIKE ? || '/%'`)
+      .all(normalized) as Array<{ path: string }>
+
+    const dirs = new Set<string>()
+    const prefixLen = normalized.length + 1 // skip the trailing '/'
+    for (const file of files) {
+      const rel = file.path.slice(prefixLen)
+      const parts = rel.split(/[\\/]/)
+      // Accumulate each directory prefix (skip the last part which is the filename)
+      let dir = ''
+      for (let i = 0; i < parts.length - 1; i++) {
+        dir = dir ? `${dir}/${parts[i]}` : parts[i]
+        dirs.add(dir)
+      }
+    }
+
+    return {
+      path: folderPath,
+      fileCount: row.fileCount,
+      folderCount: dirs.size,
+      totalSizeBytes: row.totalSizeBytes,
+    }
+  }
+
+  getFileChecksums(folderPath: string): Array<{ relativePath: string; checksum: string }> {
+    if (!this.db) throw new Error('Database not opened')
+    const normalized = folderPath.replace(/[\\/]+$/, '')
+    const rows = this.db
+      .prepare(
+        `SELECT relative_path, checksum FROM file_metadata
+         WHERE path LIKE ? || '/%' ORDER BY relative_path`,
+      )
+      .all(normalized) as Array<{ relative_path: string; checksum: string }>
+    return rows.map((r) => ({ relativePath: r.relative_path, checksum: r.checksum }))
   }
 
   getTransferStats(fromTs: number, toTs: number): Array<{ timestamp: number; upload_bytes: number; download_bytes: number; files_transferred: number }> {

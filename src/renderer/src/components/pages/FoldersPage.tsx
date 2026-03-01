@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { ipc } from '../../lib/ipc-client'
-import type { SyncStatus } from '@shared/types/sync'
+import type { SyncStatus, FolderStats } from '@shared/types/sync'
 import { formatBytes } from '@shared/utils/format'
 
 interface FoldersPageProps {
@@ -9,11 +9,24 @@ interface FoldersPageProps {
 
 export function FoldersPage({ status }: FoldersPageProps): React.JSX.Element {
   const [folders, setFolders] = useState<string[]>([])
+  const [folderStats, setFolderStats] = useState<Record<string, FolderStats>>({})
   const [hoveredFolder, setHoveredFolder] = useState<string | null>(null)
+  const prevStatusRef = useRef(status.state)
+
+  const fetchStats = useCallback((paths: string[]) => {
+    for (const p of paths) {
+      void ipc.invoke('sync:get-folder-stats', p).then((stats) => {
+        setFolderStats((prev) => ({ ...prev, [p]: stats }))
+      })
+    }
+  }, [])
 
   const refreshFolders = useCallback(() => {
-    void ipc.invoke('sync:get-folders').then(setFolders)
-  }, [])
+    void ipc.invoke('sync:get-folders').then((paths) => {
+      setFolders(paths)
+      fetchStats(paths)
+    })
+  }, [fetchStats])
 
   useEffect(() => {
     refreshFolders()
@@ -22,6 +35,14 @@ export function FoldersPage({ status }: FoldersPageProps): React.JSX.Element {
     })
     return unsubscribe
   }, [refreshFolders])
+
+  // Re-fetch stats when sync finishes (transitions away from 'syncing')
+  useEffect(() => {
+    if (prevStatusRef.current === 'syncing' && status.state !== 'syncing' && folders.length > 0) {
+      fetchStats(folders)
+    }
+    prevStatusRef.current = status.state
+  }, [status.state, folders, fetchStats])
 
   async function handleAddFolder(): Promise<void> {
     const selected = await ipc.invoke('dialog:select-folder')
@@ -126,6 +147,15 @@ export function FoldersPage({ status }: FoldersPageProps): React.JSX.Element {
                       <p className="mt-0.5 truncate text-xs text-gray-400" title={folder}>
                         {parentPath}
                       </p>
+                      {folderStats[folder] && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          {folderStats[folder].fileCount.toLocaleString()} {folderStats[folder].fileCount === 1 ? 'file' : 'files'}
+                          {' \u00B7 '}
+                          {folderStats[folder].folderCount.toLocaleString()} {folderStats[folder].folderCount === 1 ? 'folder' : 'folders'}
+                          {' \u00B7 '}
+                          {formatBytes(folderStats[folder].totalSizeBytes)}
+                        </p>
+                      )}
                     </div>
 
                     {/* Actions */}
