@@ -65,6 +65,7 @@ describe('AuthManager', () => {
       publishableKey: 'pk_test_example.clerk.accounts.dev',
       secretKey: 'sk_test_secret',
       oauthClientId: 'client_test_123',
+      oauthClientSecret: 'secret_test_456',
       redirectUri: 'http://127.0.0.1:19876/callback',
       logger: {
         debug: vi.fn(),
