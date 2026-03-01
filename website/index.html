@@ -55,7 +55,7 @@
       "System tray integration",
       "Bandwidth throttling controls"
     ],
-    "downloadUrl": "https://syncbox.vercel.app/releases/Syncbox-0.2.2-x64-setup.exe",
+    "downloadUrl": "https://github.com/coldnight-next/syncbox/releases/latest/download/Syncbox-0.2.2-x64-setup.exe",
     "fileSize": "83MB",
     "screenshot": "https://syncbox.vercel.app/assets/screenshot.png"
   }
@@ -1236,36 +1236,35 @@
         document.getElementById('modal-user-greeting').textContent = `Welcome, ${name}! Choose your preferred installer.`;
       }
 
-      // Direct download links hosted on Vercel
-      document.getElementById('download-exe-link').href = '/releases/Syncbox-0.2.2-x64-setup.exe';
-      document.getElementById('download-exe-link').setAttribute('download', '');
-      document.getElementById('download-msi-link').href = '/releases/Syncbox-0.2.2-x64-setup.msi';
-      document.getElementById('download-msi-link').setAttribute('download', '');
+      // Download links point to GitHub Releases (installers exceed Vercel's 50MB limit)
+      var ghBase = 'https://github.com/coldnight-next/syncbox/releases/latest/download/';
+      document.getElementById('download-exe-link').href = ghBase + 'Syncbox-0.2.2-x64-setup.exe';
+      document.getElementById('download-msi-link').href = ghBase + 'Syncbox-0.2.2-x64-setup.msi';
 
-      // Try to fetch latest version info from GitHub to update labels
+      // Fetch latest release to keep version labels up to date
       fetch('https://api.github.com/repos/coldnight-next/syncbox/releases/latest')
         .then(r => r.ok ? r.json() : null)
         .then(release => {
           if (!release) return;
-          const version = release.tag_name || release.name;
-          const assets = release.assets || [];
-          const exeAsset = assets.find(a => a.name.endsWith('-setup.exe'));
-          const msiAsset = assets.find(a => a.name.endsWith('.msi'));
+          var version = release.tag_name || release.name;
+          var assets = release.assets || [];
+          var exeAsset = assets.find(a => a.name.endsWith('-setup.exe'));
+          var msiAsset = assets.find(a => a.name.endsWith('.msi'));
 
           if (exeAsset) {
             document.getElementById('download-exe-link').href = exeAsset.browser_download_url;
-            const sizeMB = (exeAsset.size / (1024 * 1024)).toFixed(0);
+            var sizeMB = (exeAsset.size / (1024 * 1024)).toFixed(0);
             document.getElementById('download-exe-link').querySelector('p:last-child').textContent =
-              `${version} \u00b7 ~${sizeMB} MB \u00b7 .exe installer`;
+              version + ' \u00b7 ~' + sizeMB + ' MB \u00b7 .exe installer';
           }
           if (msiAsset) {
             document.getElementById('download-msi-link').href = msiAsset.browser_download_url;
-            const sizeMB = (msiAsset.size / (1024 * 1024)).toFixed(0);
+            var sizeMB2 = (msiAsset.size / (1024 * 1024)).toFixed(0);
             document.getElementById('download-msi-link').querySelector('p:last-child').textContent =
-              `${version} \u00b7 ~${sizeMB} MB \u00b7 .msi installer`;
+              version + ' \u00b7 ~' + sizeMB2 + ' MB \u00b7 .msi installer';
           }
         })
-        .catch(() => {}); // Silently ignore — direct links already set
+        .catch(function() {}); // Silently ignore — GitHub Release links already set as defaults
     }
 
     function closeDownloadModal() {
