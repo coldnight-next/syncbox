@@ -310,6 +310,15 @@ export class SyncEngine {
 
   /** Handle an incoming P2P message from a connected peer. Called by PeerManager's onMessage callback. */
   handlePeerMessage(fromDeviceId: string, msg: PeerMessage): void {
+    // folder-config must be processed even when engine is stopped/paused
+    // because it bootstraps the sync folder list on new devices
+    if (msg.type === 'folder-config') {
+      if (this.options.onFolderConfigReceived) {
+        this.options.onFolderConfigReceived(msg.payload as FolderConfigPayload)
+      }
+      return
+    }
+
     if (this.paused || !this.running) return
 
     switch (msg.type) {
@@ -324,11 +333,6 @@ export class SyncEngine {
         break
       case 'file-data-end':
         void this.handleFileDataEnd(msg.payload as { requestId: string; totalChunks: number; checksum: string })
-        break
-      case 'folder-config':
-        if (this.options.onFolderConfigReceived) {
-          this.options.onFolderConfigReceived(msg.payload as FolderConfigPayload)
-        }
         break
       default:
         break
