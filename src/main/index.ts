@@ -1,4 +1,8 @@
+import dns from 'node:dns'
 import { app, BrowserWindow } from 'electron'
+
+// Allow IPv6 DNS results so relay connections work when only AAAA records are available
+dns.setDefaultResultOrder('verbatim')
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { createAppWindow, setQuitting, registerAppProtocol, setupProtocolHandler } from './app-window'
 import { registerIpcHandlers } from './ipc-handlers'
