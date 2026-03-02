@@ -61,6 +61,7 @@ interface PendingReceive {
   checksum: string | null
   totalChunks: number | null
   fromDeviceId: string
+  remoteClock: import('../shared/types/peer').VectorClock
 }
 
 export class SyncEngine {
@@ -585,7 +586,7 @@ export class SyncEngine {
 
       if (!localClock) {
         // We don't have this file — request it
-        this.requestFile(fromDeviceId, remoteEntry.relativePath, syncRoot)
+        this.requestFile(fromDeviceId, remoteEntry.relativePath, syncRoot, remoteEntry.clock)
         continue
       }
 
@@ -598,7 +599,7 @@ export class SyncEngine {
 
       if (comparison === 'before') {
         // Remote is newer — request file
-        this.requestFile(fromDeviceId, remoteEntry.relativePath, syncRoot)
+        this.requestFile(fromDeviceId, remoteEntry.relativePath, syncRoot, remoteEntry.clock)
         continue
       }
 
@@ -636,7 +637,7 @@ export class SyncEngine {
 
       if (result.action === 'keep-remote' || result.action === 'keep-both') {
         // Request the remote version
-        this.requestFile(fromDeviceId, remoteEntry.relativePath, syncRoot)
+        this.requestFile(fromDeviceId, remoteEntry.relativePath, syncRoot, remoteEntry.clock)
       }
       // For keep-local or ask, we don't fetch the remote file
 
@@ -646,7 +647,7 @@ export class SyncEngine {
     }
   }
 
-  private requestFile(fromDeviceId: string, relativePath: string, syncRoot?: string): void {
+  private requestFile(fromDeviceId: string, relativePath: string, syncRoot?: string, remoteClock?: import('../shared/types/peer').VectorClock): void {
     if (!this.peerManager) return
 
     this.activeJobs++
@@ -663,6 +664,7 @@ export class SyncEngine {
       checksum: null,
       totalChunks: null,
       fromDeviceId,
+      remoteClock: remoteClock ?? incrementClock(createClock(), fromDeviceId),
     })
 
     this.peerManager.sendTo(fromDeviceId, msg)
@@ -788,10 +790,9 @@ export class SyncEngine {
         syncedAt: Date.now(),
       })
 
-      // Merge vector clock with remote
+      // Merge vector clock with the actual remote clock from the manifest
       const localClock = this.metadataStore.getVectorClock(pending.relativePath) ?? createClock()
-      const remoteClock = incrementClock(createClock(), pending.fromDeviceId)
-      const merged = mergeClock(localClock, remoteClock)
+      const merged = mergeClock(localClock, pending.remoteClock)
       this.metadataStore.setVectorClock(pending.relativePath, merged)
 
       // Update folder state hash after successful receive
