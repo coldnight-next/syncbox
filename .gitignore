@@ -49,3 +49,5 @@ certs/
 # Website release binaries (too large for git, hosted on GitHub Releases)
 website/releases/*.exe
 website/releases/*.msi
+
+.vercel

@@ -44,6 +44,13 @@ export function FoldersPage({ status }: FoldersPageProps): React.JSX.Element {
     prevStatusRef.current = status.state
   }, [status.state, folders, fetchStats])
 
+  // Periodically refresh stats every 10s so counts stay current as files arrive
+  useEffect(() => {
+    if (folders.length === 0) return
+    const interval = setInterval(() => fetchStats(folders), 10_000)
+    return () => clearInterval(interval)
+  }, [folders, fetchStats])
+
   async function handleAddFolder(): Promise<void> {
     const selected = await ipc.invoke('dialog:select-folder')
     if (selected) {
