@@ -26,6 +26,7 @@ export class FileWatcher {
     const ignoredPatterns: (string | ((p: string) => boolean))[] = [
       ...this.options.ignoredPatterns,
       (p: string) => /[\\/]\.syncbox([\\/]|$)/.test(p),
+      (p: string) => /[\\/]\.next([\\/]|$)/.test(p),
     ]
 
     this.watcher = watch(this.options.paths, {
