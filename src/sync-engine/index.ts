@@ -445,6 +445,10 @@ export class SyncEngine {
   private async handleLocalFileEvent(eventType: string, filePath: string): Promise<void> {
     if (this.paused || !this.running) return
 
+    // Skip .syncbox/ internal files — they are managed by the engine, not user content
+    const normalized = filePath.replace(/\\/g, '/')
+    if (/[\\/]\.syncbox[\\/]/.test(filePath) || normalized.includes('/.syncbox/')) return
+
     // Write suppression: skip events for files we just wrote from incoming sync
     const resolved = path.resolve(filePath)
     const suppressExpiry = this.writeSuppressed.get(resolved)

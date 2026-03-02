@@ -20,10 +20,18 @@ export class FileWatcher {
   async start(): Promise<void> {
     if (this.watcher) return
 
+    // Build ignored: combine glob patterns with a function guard for .syncbox/
+    // The function guard ensures .syncbox paths are always ignored regardless of
+    // how chokidar normalizes paths on Windows.
+    const ignoredPatterns: (string | ((p: string) => boolean))[] = [
+      ...this.options.ignoredPatterns,
+      (p: string) => /[\\/]\.syncbox([\\/]|$)/.test(p),
+    ]
+
     this.watcher = watch(this.options.paths, {
       persistent: true,
       ignoreInitial: true,
-      ignored: this.options.ignoredPatterns,
+      ignored: ignoredPatterns,
       awaitWriteFinish: {
         stabilityThreshold: 500,
         pollInterval: 100,
