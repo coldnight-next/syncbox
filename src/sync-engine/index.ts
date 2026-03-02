@@ -399,7 +399,7 @@ export class SyncEngine {
       const fullPath = path.join(dir, entry.name)
       if (entry.isDirectory()) {
         // Skip ignored directories
-        if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === '.syncbox') {
+        if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === '.syncbox' || entry.name === '.next') {
           continue
         }
         await this.scanDirectory(fullPath, syncRoot)
@@ -530,7 +530,7 @@ export class SyncEngine {
     for (const entry of dirEntries) {
       const fullPath = path.join(dir, entry.name)
       if (entry.isDirectory()) {
-        if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === '.syncbox') continue
+        if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === '.syncbox' || entry.name === '.next') continue
         this.collectManifestEntries(fullPath, syncRoot, entries)
       } else if (entry.isFile()) {
         const meta = this.metadataStore.getFileMetadata(fullPath)

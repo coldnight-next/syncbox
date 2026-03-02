@@ -299,7 +299,7 @@ void app.whenReady().then(async () => {
       debounceMs: 500,
       windowMs: 2000,
       maxPendingEvents: 10000,
-      ignoredPatterns: ['*.tmp', '.git/**', 'node_modules/**', '.syncbox/**'],
+      ignoredPatterns: ['*.tmp', '.git/**', 'node_modules/**', '.syncbox/**', '.next/**'],
       immediatePatterns: [],
     },
     conflictStrategy: 'keep-newest',
