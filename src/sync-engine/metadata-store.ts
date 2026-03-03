@@ -174,17 +174,18 @@ export class MetadataStore {
     // Normalize: ensure folderPath ends without trailing slash for consistent LIKE matching
     const normalized = folderPath.replace(/[\\/]+$/, '')
 
+    // Match both forward-slash and backslash paths (Windows stores backslashes)
     const row = this.db
       .prepare(
         `SELECT COUNT(*) as fileCount, COALESCE(SUM(size), 0) as totalSizeBytes
-         FROM file_metadata WHERE path LIKE ? || '/%'`,
+         FROM file_metadata WHERE path LIKE ? || '/%' OR path LIKE ? || '\\%'`,
       )
-      .get(normalized) as { fileCount: number; totalSizeBytes: number }
+      .get(normalized, normalized) as { fileCount: number; totalSizeBytes: number }
 
     // Count distinct subdirectories by extracting unique dir prefixes from file paths
     const files = this.db
-      .prepare(`SELECT path FROM file_metadata WHERE path LIKE ? || '/%'`)
-      .all(normalized) as Array<{ path: string }>
+      .prepare(`SELECT path FROM file_metadata WHERE path LIKE ? || '/%' OR path LIKE ? || '\\%'`)
+      .all(normalized, normalized) as Array<{ path: string }>
 
     const dirs = new Set<string>()
     const prefixLen = normalized.length + 1 // skip the trailing '/'
@@ -213,9 +214,9 @@ export class MetadataStore {
     const rows = this.db
       .prepare(
         `SELECT relative_path, checksum FROM file_metadata
-         WHERE path LIKE ? || '/%' ORDER BY relative_path`,
+         WHERE path LIKE ? || '/%' OR path LIKE ? || '\\%' ORDER BY relative_path`,
       )
-      .all(normalized) as Array<{ relative_path: string; checksum: string }>
+      .all(normalized, normalized) as Array<{ relative_path: string; checksum: string }>
     return rows.map((r) => ({ relativePath: r.relative_path, checksum: r.checksum }))
   }
 
