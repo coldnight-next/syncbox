@@ -84,13 +84,14 @@ export class PeerManager {
   }
 
   /** Connect to the relay server for internet P2P sync. */
-  startRelay(relayUrl: string, token: string): void {
+  startRelay(relayUrl: string, token: string, getToken?: () => string | null): void {
     if (this.relayConnection) return
     if (!relayUrl) return
 
     this.relayConnection = new RelayConnection({
       relayUrl,
       token,
+      getToken,
       deviceId: this.options.deviceId,
       logger: this.options.logger,
       onPeerJoined: (deviceId) => {

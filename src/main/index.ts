@@ -107,7 +107,7 @@ function startPeerSync(userId: string): void {
     const token = authManager.getAccessToken()
     logger.info('Relay token status', { hasToken: !!token })
     if (token) {
-      peerManager.startRelay(relayUrl, token)
+      peerManager.startRelay(relayUrl, token, () => authManager!.getAccessToken())
       logger.info('Relay connection started', { relayUrl })
     } else {
       logger.warn('No valid access token for relay, skipping relay connection')
