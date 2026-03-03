@@ -281,9 +281,7 @@ void app.whenReady().then(async () => {
         sendToRenderer('auth:state-changed', state)
       },
     })
-    await authManager.initialize()
-    logger.info('AuthManager initialized')
-
+    // Don't block on auth — initialization fires events that push state to renderer
   } else {
     logger.warn('Clerk keys not configured, auth disabled')
   }
@@ -318,21 +316,7 @@ void app.whenReady().then(async () => {
 
   setTraySyncEngine(syncEngine)
 
-  // Now that syncEngine exists, start P2P if we have a restored auth session
-  if (authManager) {
-    const restoredState = authManager.getState()
-    if (restoredState.isAuthenticated && restoredState.userId) {
-      logger.info('Restored auth session, starting P2P', { userId: restoredState.userId })
-      startPeerSync(restoredState.userId)
-    }
-  }
-
-  // Auto-start sync engine if folders are already configured
-  if (currentSyncFolders.length > 0) {
-    await syncEngine.start()
-    logger.info('SyncEngine auto-started', { folders: currentSyncFolders })
-  }
-
+  // Register IPC handlers immediately so the renderer can communicate
   registerIpcHandlers(syncEngine, authManager ?? undefined, {
     onUserAuthenticated: (userId) => {
       startPeerSync(userId)
@@ -362,6 +346,33 @@ void app.whenReady().then(async () => {
       sendToRenderer(IPC_EVENTS.STATS_REALTIME_UPDATE, point)
     }
   }, 5000)
+
+  // Fire-and-forget: auth initialization (push-based events update renderer)
+  if (authManager) {
+    authManager.initialize()
+      .then(() => {
+        logger.info('AuthManager initialized')
+        const restoredState = authManager!.getState()
+        if (restoredState.isAuthenticated && restoredState.userId) {
+          logger.info('Restored auth session, starting P2P', { userId: restoredState.userId })
+          startPeerSync(restoredState.userId)
+        }
+      })
+      .catch((err) => {
+        logger.error('AuthManager initialization failed', { error: String(err) })
+      })
+  }
+
+  // Fire-and-forget: sync engine start (status pushes via onStatusChange)
+  if (currentSyncFolders.length > 0) {
+    syncEngine.start()
+      .then(() => {
+        logger.info('SyncEngine auto-started', { folders: currentSyncFolders })
+      })
+      .catch((err) => {
+        logger.error('SyncEngine start failed', { error: String(err) })
+      })
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

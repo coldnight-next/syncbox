@@ -13,6 +13,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   config: null,
   loading: false,
   loadConfig: async () => {
+    if (get().config !== null) return
     set({ loading: true })
     const config = await ipc.invoke('config:get')
     set({ config, loading: false })

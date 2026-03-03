@@ -1,14 +1,15 @@
 import { Sidebar, type NavPage } from './components/layout/Sidebar'
-import { FoldersPage } from './components/pages/FoldersPage'
-import { ActivityPage } from './components/pages/ActivityPage'
-import { DevicesPage } from './components/pages/DevicesPage'
-import { SettingsPage } from './components/pages/SettingsPage'
 import { DashboardPage } from './components/pages/DashboardPage'
 import { useSyncStatus } from './hooks/useSyncStatus'
 import { useSyncStore } from './stores/sync-store'
-import { useSettingsStore } from './stores/settings-store'
 import { useAuthStore } from './stores/auth-store'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
+
+// Lazy-loaded pages — only parsed when navigated to
+const FoldersPage = lazy(() => import('./components/pages/FoldersPage').then(m => ({ default: m.FoldersPage })))
+const ActivityPage = lazy(() => import('./components/pages/ActivityPage').then(m => ({ default: m.ActivityPage })))
+const DevicesPage = lazy(() => import('./components/pages/DevicesPage').then(m => ({ default: m.DevicesPage })))
+const SettingsPage = lazy(() => import('./components/pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
 
 export function App(): React.JSX.Element {
   const { auth, loading, error, loadState, signIn, clearError } = useAuthStore()
@@ -97,11 +98,6 @@ function AppShell(): React.JSX.Element {
   const { status } = useSyncStatus()
   const conflicts = useSyncStore((s) => s.conflicts)
   const [currentPage, setCurrentPage] = useState<NavPage>('dashboard')
-  const loadConfig = useSettingsStore((s) => s.loadConfig)
-
-  useEffect(() => {
-    void loadConfig()
-  }, [loadConfig])
 
   return (
     <div className="flex h-screen bg-surface-secondary text-gray-900">
@@ -112,11 +108,13 @@ function AppShell(): React.JSX.Element {
         conflictCount={conflicts.length}
       />
       <main className="flex-1 overflow-hidden">
-        {currentPage === 'dashboard' && <DashboardPage />}
-        {currentPage === 'folders' && <FoldersPage status={status} />}
-        {currentPage === 'activity' && <ActivityPage status={status} conflicts={conflicts} />}
-        {currentPage === 'devices' && <DevicesPage />}
-        {currentPage === 'settings' && <SettingsPage />}
+        <Suspense fallback={<div className="flex h-full items-center justify-center"><p className="text-sm text-slate-400">Loading...</p></div>}>
+          {currentPage === 'dashboard' && <DashboardPage />}
+          {currentPage === 'folders' && <FoldersPage status={status} />}
+          {currentPage === 'activity' && <ActivityPage status={status} conflicts={conflicts} />}
+          {currentPage === 'devices' && <DevicesPage />}
+          {currentPage === 'settings' && <SettingsPage />}
+        </Suspense>
       </main>
     </div>
   )

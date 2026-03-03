@@ -390,7 +390,7 @@ export class SyncEngine {
   private async scanDirectory(dir: string, syncRoot: string): Promise<void> {
     let entries: fs.Dirent[]
     try {
-      entries = fs.readdirSync(dir, { withFileTypes: true })
+      entries = await fs.promises.readdir(dir, { withFileTypes: true })
     } catch {
       return
     }
@@ -411,7 +411,7 @@ export class SyncEngine {
 
   private async indexFile(filePath: string, syncRoot: string): Promise<void> {
     try {
-      const stat = fs.statSync(filePath)
+      const stat = await fs.promises.stat(filePath)
       const relPath = relativeSyncPath(filePath, syncRoot)
       const existing = this.metadataStore.getFileMetadata(filePath)
 
