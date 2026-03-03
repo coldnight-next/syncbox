@@ -42,17 +42,15 @@ win:
     rfc3161TimeStampServer: http://timestamp.digicert.com
 
 nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
+  oneClick: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: Syncbox
   runAfterFinish: true
-  installerSidebar: build/installerSidebar.bmp
-  uninstallerSidebar: build/installerSidebar.bmp
   perMachine: false
   allowElevation: true
   deleteAppDataOnUninstall: false
+  include: build/installer.nsh
 
 msi:
   oneClick: false

@@ -78,6 +78,11 @@ export function Sidebar({ currentPage, onNavigate, status, conflictCount }: Side
         />
       </nav>
 
+      {/* Version */}
+      <div className="px-4 pb-1">
+        <span className="text-[10px] text-sidebar-text/50">v{__APP_VERSION__}</span>
+      </div>
+
       {/* User */}
       <UserSection />
     </aside>
